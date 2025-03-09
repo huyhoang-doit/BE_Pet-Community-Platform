@@ -8,11 +8,11 @@ class CampaignService {
   }
   getCurrentCampaign = async () => {
     const currentDate = new Date()
-    const campaign = await Campaign.findOne({
+    const campaigns = await Campaign.find({
       startDate: { $lte: currentDate },
       endDate: { $gte: currentDate }
     })
-    return campaign
+    return campaigns
   }
   getCampaigns = async (query) => {
     const { sortBy, limit, page, q } = query

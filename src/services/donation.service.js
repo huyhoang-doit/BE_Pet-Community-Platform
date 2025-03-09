@@ -75,22 +75,31 @@ class DonationService {
   }
 
   getAllDonation = async (query) => {
-    const { q, page, limit, sortBy } = query
+    const { q, page, limit, sortBy, campaign } = query
+
+    const filter = {
+      status: TRANSACTION_STATUS.COMPLETED
+    }
+
+    if (campaign) {
+      filter.campaign = campaign
+    }
+
     const options = {
-      sortBy: sortBy || 'createdAt',
-      limit: limit ? parseInt(limit) : 5,
+      sortBy: sortBy || 'createdAt:desc',
+      limit: limit ? parseInt(limit) : 10,
       page: page ? parseInt(page) : 1,
-      allowSearchFields: ['message'],
+      allowSearchFields: ['description', 'message'],
       q: q ?? '',
       populate: 'user,campaign'
     }
-    return await Donation.paginate({}, options)
+    return await Donation.paginate(filter, options)
   }
 
   getDonationByUserId = async (userId, query) => {
     const { q, page, limit, sortBy } = query
     const options = {
-      sortBy: sortBy || 'createdAt',
+      sortBy: sortBy || 'createdAt:desc',
       limit: limit ? parseInt(limit) : 5,
       page: page ? parseInt(page) : 1,
       allowSearchFields: ['message'],
