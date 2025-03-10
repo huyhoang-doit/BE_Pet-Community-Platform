@@ -1532,7 +1532,7 @@ paths:
       requestBody:
         required: true
         content:
-          application/json:
+          multipart/form-data:
             schema:
               $ref: "#/components/schemas/CampaignRequest"
       responses:
@@ -1546,6 +1546,27 @@ paths:
           description: Bad request
         "401":
           description: Unauthorized
+
+    get:
+      tags:
+        - Campaigns
+      summary: Get all campaigns (Admin only)
+      description: Retrieve all campaigns. Requires admin role.
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Campaigns retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Campaign"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - Admin access required
 
   /campaigns/current:
     get:
@@ -1566,6 +1587,87 @@ paths:
           description: No active campaign found
         "401":
           description: Unauthorized
+
+  /campaigns/{id}:
+    get:
+      tags:
+        - Campaigns
+      summary: Get campaign by ID
+      description: Retrieve a specific campaign by its ID.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Campaign ID
+      responses:
+        "200":
+          description: Campaign retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Campaign"
+        "404":
+          description: Campaign not found
+        "401":
+          description: Unauthorized
+
+    delete:
+      tags:
+        - Campaigns
+      summary: Stop a campaign (Admin only)
+      description: Stop an active campaign. Requires admin role.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Campaign ID
+      responses:
+        "200":
+          description: Campaign stopped successfully
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - Admin access required
+        "404":
+          description: Campaign not found
+
+  /campaigns/{id}/donations:
+    get:
+      tags:
+        - Campaigns
+      summary: Get donations for a campaign
+      description: Retrieve all donations for a specific campaign.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Campaign ID
+      responses:
+        "200":
+          description: Campaign donations retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Donation"
+        "401":
+          description: Unauthorized
+        "404":
+          description: Campaign not found
+
   /blog/create:
     post:
       tags:
@@ -1791,13 +1893,11 @@ paths:
           description: Number of posts to return
           schema:
             type: integer
-            default: 5
         - name: page
           in: query
           description: Page number
           schema:
             type: integer
-            default: 1
         - name: q
           in: query
           description: Search query for post captions
@@ -1907,4 +2007,214 @@ paths:
                   message:
                     type: string
                     example: "Failed to fetch staffs"
+
+  /adoption-post:
+    post:
+      summary: Create new adoption post
+      tags:
+        - AdoptionPost
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                media:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                  description: Media files for the adoption post
+      responses:
+        201:
+          description: Successfully created adoption post
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdoptionPost'
+        401:
+          description: Unauthorized
+
+  /adoption-post/{id}:
+    put:
+      summary: Update adoption post
+      tags:
+        - AdoptionPost
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the adoption post
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                media:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                  description: Updated media files
+      responses:
+        200:
+          description: Successfully updated adoption post
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdoptionPost'
+        401:
+          description: Unauthorized
+        404:
+          description: Adoption post not found
+
+  /adoption-post/form-check:
+    post:
+      summary: Check periodic adoption forms
+      tags:
+        - AdoptionPost
+      security:
+        - BearerAuth: []
+      description: Service staff only endpoint to check periodic adoption forms
+      responses:
+        200:
+          description: Successfully checked adoption forms
+        401:
+          description: Unauthorized
+        403:
+          description: Forbidden - Service staff access required
+
+  /adoption-post/form:
+    get:
+      summary: Get all adoption forms
+      tags:
+        - AdoptionPost
+      security:
+        - BearerAuth: []
+      description: Service staff only endpoint to get all adoption forms
+      responses:
+        200:
+          description: Successfully retrieved adoption forms
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    _id:
+                      type: string
+                    status:
+                      type: string
+                    adoptionPost:
+                      type: string
+                    submittedBy:
+                      type: string
+                    createdAt:
+                      type: string
+                      format: date-time
+        401:
+          description: Unauthorized
+        403:
+          description: Forbidden - Service staff access required
+
+    post:
+      summary: Create adoption form
+      tags:
+        - AdoptionPost
+      security:
+        - BearerAuth: []
+      description: Service staff only endpoint to create an adoption form
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                adoptionPost:
+                  type: string
+                  description: ID of the adoption post
+                status:
+                  type: string
+                  description: Status of the adoption form
+      responses:
+        201:
+          description: Successfully created adoption form
+        401:
+          description: Unauthorized
+        403:
+          description: Forbidden - Service staff access required
+
+  /adoption-post/form/{formId}:
+    put:
+      summary: Update adoption form status
+      tags:
+        - AdoptionPost
+      security:
+        - BearerAuth: []
+      description: Service staff only endpoint to update adoption form status
+      parameters:
+        - name: formId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the adoption form
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  description: New status for the adoption form
+      responses:
+        200:
+          description: Successfully updated adoption form status
+        401:
+          description: Unauthorized
+        403:
+          description: Forbidden - Service staff access required
+        404:
+          description: Adoption form not found
+
+  /adoption-post/breed/{breedId}:
+    get:
+      summary: Get adoption posts by breed
+      tags:
+        - AdoptionPost
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: breedId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the breed to filter posts
+      responses:
+        200:
+          description: Successfully retrieved adoption posts for breed
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AdoptionPost'
+        401:
+          description: Unauthorized
+        404:
+          description: Breed not found
 

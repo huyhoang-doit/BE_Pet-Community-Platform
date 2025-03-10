@@ -75,7 +75,9 @@ const CAMPAIGN_MESSAGE = {
   CAMPAIGN_CREATED_SUCCESSFULLY: 'Campaign created successfully',
   CAMPAIGN_UPDATED_SUCCESSFULLY: 'Campaign updated successfully',
   CAMPAIGN_DELETED_SUCCESSFULLY: 'Campaign deleted successfully',
-  GET_CURRENT_CAMPAIGN_SUCCESSFULLY: 'Get current campaign successfully'
+  GET_CURRENT_CAMPAIGN_SUCCESSFULLY: 'Get current campaign successfully',
+  GET_CAMPAIGN_BY_ID_SUCCESSFULLY: 'Get campaign by id successfully',
+  GET_DONATIONS_BY_CAMPAIGN_ID_SUCCESSFULLY: 'Get donations by campaign id successfully'
 }
 
 const DONATION_MESSAGE = {

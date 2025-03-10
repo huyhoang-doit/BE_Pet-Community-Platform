@@ -1,4 +1,5 @@
 const Campaign = require('../models/campaign.model')
+const Donation = require('../models/donation.model')
 
 class CampaignService {
   createCampaign = async (title, description, startDate, endDate, targetAmount, image, user) => {
@@ -7,11 +8,11 @@ class CampaignService {
   }
   getCurrentCampaign = async () => {
     const currentDate = new Date()
-    const campaign = await Campaign.findOne({
+    const campaigns = await Campaign.find({
       startDate: { $lte: currentDate },
       endDate: { $gte: currentDate }
     })
-    return campaign
+    return campaigns
   }
   getCampaigns = async (query) => {
     const { sortBy, limit, page, q } = query
@@ -29,6 +30,14 @@ class CampaignService {
 
   stopCampaign = async (id) => {
     await Campaign.findByIdAndUpdate(id, { isActive: false })
+  }
+
+  getCampaignById = async (id) => {
+    return await Campaign.findById(id).populate('user', 'username profilePicture firstName lastName')
+  }
+
+  getDonationsByCampaignId = async (id) => {
+    return await Donation.find({ campaign: id }).populate('user', 'username profilePicture firstName lastName')
   }
 }
 

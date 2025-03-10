@@ -44,6 +44,18 @@ class CampaignController {
     await campaignService.stopCampaign(id)
     return OK(res, CAMPAIGN_MESSAGE.CAMPAIGN_DELETED_SUCCESSFULLY)
   })
+
+  getCampaignById = catchAsync(async (req, res) => {
+    const { id } = req.params
+    const campaign = await campaignService.getCampaignById(id)
+    return OK(res, CAMPAIGN_MESSAGE.GET_CAMPAIGN_BY_ID_SUCCESSFULLY, campaign)
+  })
+
+  getDonationsByCampaignId = catchAsync(async (req, res) => {
+    const { id } = req.params
+    const donations = await campaignService.getDonationsByCampaignId(id)
+    return OK(res, CAMPAIGN_MESSAGE.GET_DONATIONS_BY_CAMPAIGN_ID_SUCCESSFULLY, donations)
+  })
 }
 
 module.exports = new CampaignController()
