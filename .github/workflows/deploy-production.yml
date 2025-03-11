@@ -1,4 +1,4 @@
-name: Deploy Production
+name: Test and Deploy Production
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: ["production"]
 
 jobs:
-  build:
+  test-start:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -28,31 +28,40 @@ jobs:
       - name: Install Dependencies
         run: npm install --force
 
-      - name: Build Application
-        run: npm run build
+      - name: Test npm run start
+        run: |
+          npm run start &
+          sleep 10  # Đợi 10 giây để kiểm tra xem server có khởi động thành công không
+          if ! ps aux | grep -v grep | grep "node"; then
+            echo "Error: npm run start did not start successfully."
+            exit 1
+          else
+            echo "npm run start executed successfully."
+            kill $(ps aux | grep -v grep | grep "node" | awk '{print $2}')  # Tắt process sau khi kiểm tra
+          fi
 
-      - name: Send Telegram Notification - Build Success
+      - name: Send Telegram Notification - Test Success
         if: success()
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TELEGRAM_TO }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
           message: |
-            ✅ *Build Successful!*
+            ✅ *Test npm run start Successful!*
             👤 *Triggered by:* `${{ github.actor }}`
             📂 *Repository:* `${{ github.repository }}`
             🔧 *Branch:* `${{ github.ref_name }}`
             📦 *Commit Message:* `${{ github.event.commits[0].message }}`
             🔗 [See Changes](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
 
-      - name: Send Telegram Notification - Build Failed
+      - name: Send Telegram Notification - Test Failed
         if: failure()
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TELEGRAM_TO }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
           message: |
-            ❌ *Build Failed!*
+            ❌ *Test npm run start Failed!*
             👤 *Triggered by:* `${{ github.actor }}`
             📂 *Repository:* `${{ github.repository }}`
             🔧 *Branch:* `${{ github.ref_name }}`
@@ -61,7 +70,7 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
-    needs: build
+    needs: test-start  # Job deploy chỉ chạy khi job test-start hoàn tất thành công
     steps:
       - name: Send Telegram Notification - Deploy Started
         uses: appleboy/telegram-action@master
