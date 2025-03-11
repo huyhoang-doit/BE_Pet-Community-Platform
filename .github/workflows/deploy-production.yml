@@ -1,0 +1,126 @@
+name: Deploy Production
+
+on:
+  push:
+    branches: ["production"]
+  pull_request:
+    branches: ["production"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set Up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "npm"
+
+      - name: Create .env File
+        run: |
+          cat <<EOF > .env
+          ${{ secrets.ENV_PRODUCTION }}
+          EOF
+
+      - name: Install Dependencies
+        run: npm install --force
+
+      - name: Build Application
+        run: npm run build
+
+      - name: Send Telegram Notification - Build Success
+        if: success()
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: |
+            ✅ *Build Successful!*
+            👤 *Triggered by:* `${{ github.actor }}`
+            📂 *Repository:* `${{ github.repository }}`
+            🔧 *Branch:* `${{ github.ref_name }}`
+            📦 *Commit Message:* `${{ github.event.commits[0].message }}`
+            🔗 [See Changes](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
+
+      - name: Send Telegram Notification - Build Failed
+        if: failure()
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: |
+            ❌ *Build Failed!*
+            👤 *Triggered by:* `${{ github.actor }}`
+            📂 *Repository:* `${{ github.repository }}`
+            🔧 *Branch:* `${{ github.ref_name }}`
+            📦 *Commit Message:* `${{ github.event.commits[0].message }}`
+            🔗 [See Changes](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Send Telegram Notification - Deploy Started
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: |
+            🚀 *Deploy Started!*
+            👤 *Triggered by:* `${{ github.actor }}`
+            📂 *Repository:* `${{ github.repository }}`
+            🔗 [See Changes](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
+
+      - name: Executing remote SSH commands using password
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.HOST_PRODUCTION }}
+          username: ${{ secrets.USERNAME_PRODUCTION }}
+          password: ${{ secrets.PASSWORD_PRODUCTION }}
+          port: ${{ secrets.PORT_PRODUCTION }}
+          script: |
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            nvm use 22 || export PATH=$HOME/.nvm/versions/node/v22/bin:$PATH
+
+            cd ~/BE_Pet-Community-Platform
+            git fetch --all
+            git reset --hard origin/main
+            git clean -fd
+
+            cat <<EOF > .env
+            ${{ secrets.ENV_PRODUCTION }}
+            EOF
+
+            npm install --force --yes
+
+            # Restart PM2
+            pm2 restart petlove-api
+            pm2 save
+
+      - name: Send Telegram Notification - Deploy Success
+        if: success()
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: |
+            ✅ *Deploy Successful!*
+            👤 *Triggered by:* `${{ github.actor }}`
+            📂 *Repository:* `${{ github.repository }}`
+            🔗 [See Changes](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
+
+      - name: Send Telegram Notification - Deploy Failed
+        if: failure()
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: |
+            ❌ *Deploy Failed!*
+            👤 *Triggered by:* `${{ github.actor }}`
+            📂 *Repository:* `${{ github.repository }}`
+            🔗 [See Changes](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
