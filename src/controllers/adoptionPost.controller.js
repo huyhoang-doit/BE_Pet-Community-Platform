@@ -27,32 +27,5 @@ class AdoptionPostController {
     return OK(res, ADOPTION_POST_MESSAGE.FETCH_SUCCESS, post)
   })
 
-  updateAdoptionFormStatus = async (req, res) => {
-      const { formId } = req.params;
-      const { status } = req.body;
-      console.log(formId, status)
-  
-      if (!['Pending', 'Approved', 'Rejected'].includes(status)) {
-        return res.status(400).json({
-          success: false,
-          message: 'Invalid status value',
-        });
-      }
-  
-      const updatedForm = await AdoptionForm.findByIdAndUpdate(
-        formId,
-        { status },
-        { new: true }
-      ).populate('adopter pet adoptionPost user');
-  console.log(updatedForm)
-  
-      if (!updatedForm) {
-        return res.status(404).json({
-          success: false,
-          message: 'Adoption form not found',
-        });
-      }
-  return OK(res, ADOPTION_FORM_MESSAGE.UPDATED_SUCCESS, updatedForm)
-  };
 }
 module.exports = new AdoptionPostController()
