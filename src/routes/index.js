@@ -3,6 +3,7 @@ const router = express.Router()
 const userRoute = require('./user.route')
 const postRoute = require('./post.route')
 const adoptionPostRoute = require('./adoptionPost.route')
+const adoptionFormRoute = require('./adoptionForm.route')
 const messageRoute = require('./message.route')
 const authRoute = require('./auth.route')
 const paymentRoute = require('./payment.route')
@@ -29,6 +30,10 @@ const routes = [
   {
     path: '/adoption-post',
     route: adoptionPostRoute
+  },
+  {
+    path: '/adoption-form',
+    route: adoptionFormRoute
   },
   {
     path: '/message',

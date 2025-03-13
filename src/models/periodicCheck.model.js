@@ -27,6 +27,10 @@ const periodicCheckSchema = new mongoose.Schema(
       type: Schema.Types.ObjectId,
       ref: 'User',
       required: [true, 'Checked by is required']
+    },
+    image_url: {
+      type: String,
+      default: ''
     }
   },
   { timestamps: true }
