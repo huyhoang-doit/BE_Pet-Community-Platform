@@ -57,7 +57,9 @@ const ADOPTION_POST_MESSAGE = {
   UPDATED_SUCCESS: 'Adoption post updated successfully',
   DELETED_SUCCESS: 'Adoption post deleted successfully',
   FETCH_ALL_SUCCESS: 'Successfully retrieved all adoption posts',
-  FETCH_SUCCESS: 'Successfully retrieved adoption post'
+  FETCH_SUCCESS: 'Successfully retrieved adoption post',
+  LIKED_SUCCESS: 'Successfully liked post',
+  SHARED_SUCCESS: 'Successfully shared post',
 }
 const ADOPTION_FORM_MESSAGE = {
   NOT_FOUND: 'Adoption form not found',
