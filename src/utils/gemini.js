@@ -131,6 +131,41 @@ async function checkContentAndImage(text, imageBuffer) {
   }
 }
 
+async function chatbot(breedName) {
+  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+  const prompt = `Hãy cung cấp hướng dẫn chăm sóc chi tiết cho giống thú cưng "${breedName}". 
+  Hãy sử dụng icon (emoji) phù hợp để minh họa từng phần trong câu trả lời. Ví dụ: 🥩 cho dinh dưỡng, 🛁 cho vệ sinh, 🚶 cho vận động.`
+
+  try {
+    const result = await model.generateContent(prompt)
+    let responseText = result.response.text()
+    console.log('Raw response:', responseText)
+
+    // Chuyển đổi Markdown sang HTML
+    let responseHtml = responseText
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\n- (.*?)/g, '<li>$1</li>')
+      .replace(/\n/g, '<br>')
+
+    return `<div>${responseHtml}</div>`
+  } catch (error) {
+    console.error('Error:', error)
+    return `
+      <div>
+        <p>Hiện tại không thể lấy thông tin chăm sóc từ Gemini. Dưới đây là hướng dẫn cơ bản mặc định:</p>
+        <ul>
+          <li>🥩 <strong>Dinh dưỡng:</strong> Cho ăn thức ăn chất lượng cao, phù hợp với kích thước và độ tuổi.</li>
+          <li>🛁 <strong>Vệ sinh:</strong> Tắm 1-2 lần/tháng, chải lông thường xuyên.</li>
+          <li>🚶 <strong>Vận động:</strong> Dắt đi dạo 20-30 phút/ngày.</li>
+          <li>🏥 <strong>Sức khỏe:</strong> Khám thú y định kỳ.</li>
+          <li>🏠 <strong>Môi trường:</strong> Chuẩn bị chỗ nghỉ sạch sẽ, thoáng mát.</li>
+        </ul>
+      </div>
+    `
+  }
+}
+
+
 // async function checkImage(imageBuffer) {
 //   const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro-latest' })
 
@@ -209,4 +244,4 @@ async function checkBoth(text, imageBuffer) {
   return await checkContentAndImage(text, imageBuffer)
 }
 
-module.exports = { checkContent, checkImage, checkBoth }
+module.exports = { checkContent, checkImage, checkBoth, chatbot }
