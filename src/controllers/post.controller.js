@@ -11,6 +11,7 @@ const cloudinaryService = require('../utils/cloudinary.js')
 const postService = require('../services/post.service.js')
 const Notification = require('../models/notification.model.js')
 const { NOTIFICAITON_TYPE } = require('../constants/enums.js')
+const { checkBoth } = require('../utils/gemini.js')
 
 class PostController {
   addNewPost = catchAsync(async (req, res) => {
@@ -24,6 +25,37 @@ class PostController {
         success: false
       })
     }
+
+    const contentCheckResult = await checkBoth(caption, mediaFiles[0].buffer)
+    if (contentCheckResult.combined_assessment.is_harmful) {
+      return res.status(400).json({
+        message: 'Nội dung không hợp lệ.',
+        success: false,
+        reason: contentCheckResult.combined_assessment.reason
+      })
+    }
+
+    // // Kiểm duyệt nội dung trước khi tạo bài post
+    // const contentCheckResult = await checkContent(caption)
+    // if (contentCheckResult.overall_toxic) {
+    //   return res.status(400).json({
+    //     message: 'Nội dung không hợp lệ.',
+    //     success: false,
+    //     reason: contentCheckResult.reason
+    //   })
+    // }
+
+    // // Kiểm duyệt ảnh trước khi tạo bài post
+    // if (mediaFiles.length > 0) {
+    //   const imageCheckResult = await checkImage(mediaFiles[0].buffer)
+    //   if (imageCheckResult.overall_harmful) {
+    //     return res.status(400).json({
+    //       message: 'Ảnh không hợp lệ.',
+    //       success: false,
+    //       reason: imageCheckResult.moderation_reason
+    //     })
+    //   }
+    // }
 
     const imageUrls = []
     const videoUrls = []

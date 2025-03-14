@@ -14,6 +14,7 @@ const blogRoute = require('./blog.route')
 const petRoute = require('./pet.route')
 const adminRoute = require('./admin.route')
 const breedRoute = require('./breed.route')
+
 const routes = [
   {
     path: '/auth',
