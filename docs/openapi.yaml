@@ -2218,3 +2218,2339 @@ paths:
         404:
           description: Breed not found
 
+openapi: 3.0.0
+info:
+  title: PLC API
+  description: API for PLC
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Local development server
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        username:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        profilePicture:
+          type: string
+        bio:
+          type: string
+        gender:
+          type: string
+        followers:
+          type: array
+          items:
+            type: string
+        following:
+          type: array
+          items:
+            type: string
+        posts:
+          type: array
+          items:
+            type: string
+        bookmarks:
+          type: array
+          items:
+            type: string
+        isVerified:
+          type: boolean
+        isActive:
+          type: boolean
+        isDeleted:
+          type: boolean
+        isBlocked:
+          type: boolean
+        address:
+          type: string
+        phoneNumber:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date
+        role:
+          type: string
+
+    Post:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        caption:
+          type: string
+        media:
+          type: array
+          items:
+            type: string
+        likes:
+          type: integer
+        dislikes:
+          type: integer
+        comments:
+          type: array
+          items:
+            type: object
+            properties:
+              userId:
+                type: string
+              text:
+                type: string
+        bookmarks:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Pet:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        breed:
+          type: string
+        age:
+          type: integer
+        health_status:
+          type: string
+          enum: [Healthy, Sick, Recovering, Injured]
+        description:
+          type: string
+        image_url:
+          type: array
+          items:
+            type: string
+        size:
+          type: string
+        coat:
+          type: string
+        temperament:
+          type: string
+        vaccinated:
+          type: boolean
+        owner:
+          type: string
+          nullable: true
+        submittedBy:
+          type: string
+          nullable: true
+        isApproved:
+          type: boolean
+        isAdopted:
+          type: boolean
+        adoptionRequests:
+          type: array
+          items:
+            type: string
+
+    CreatePaymentRequest:
+      type: object
+      properties:
+        amount:
+          type: number
+          example: 50000
+        description:
+          type: string
+          example: 'Donation to campaign'
+        campaignId:
+          type: string
+          format: uuid
+        returnUrl:
+          type: string
+          format: uri
+        cancelUrl:
+          type: string
+          format: uri
+      required:
+        - amount
+        - campaignIdA
+
+    Notification:
+      type: object
+      properties:
+        id:
+          type: string
+          example: '60f7c5e8f0d5d90015d28b3f'
+        recipient:
+          type: string
+          example: '60f7c5e8f0d5d90015d28b3e'
+        sender:
+          type: string
+          example: '60f7c5e8f0d5d90015d28b3d'
+        type:
+          type: string
+          enum: [like, comment, follow, mention]
+          example: 'like'
+        post:
+          type: string
+          nullable: true
+          example: '60f7c5e8f0d5d90015d28b3a'
+        read:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: 'User123 liked your post.'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    PaymentLinkResponse:
+      type: object
+      properties:
+        paymentUrl:
+          type: string
+          format: uri
+          example: 'https://payment.provider.com/checkout/12345'
+        expiresAt:
+          type: string
+          format: date-time
+      required:
+        - paymentUrl
+        - expiresAt
+
+    CancelPaymentRequest:
+      type: object
+      properties:
+        paymentId:
+          type: string
+          format: uuid
+          example: 'c29d9c21-4b60-4b11-9f00-d8f6e3a3c21f'
+      required:
+        - paymentId
+
+    PaymentWebhook:
+      type: object
+      properties:
+        eventType:
+          type: string
+          example: 'PAYMENT_COMPLETED'
+        paymentId:
+          type: string
+          format: uuid
+        timestamp:
+          type: string
+          format: date-time
+      required:
+        - eventType
+        - paymentId
+        - timestamp
+
+    Message:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: '60d21b4667d0d8992e610c85'
+        senderId:
+          type: string
+          example: '60d21b4667d0d8992e610c81'
+        receiverId:
+          type: string
+          example: '60d21b4667d0d8992e610c82'
+        message:
+          type: string
+          example: 'Hello, how are you?'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Donation:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: '60d21b4667d0d8992e610c85'
+        user:
+          type: string
+          example: '60d21b4667d0d8992e610c81'
+        campaign:
+          type: string
+          example: '60d21b4667d0d8992e610c82'
+        amount:
+          type: number
+          example: 100.0
+        description:
+          type: string
+          example: 'Donation for animal rescue'
+        code:
+          type: string
+          example: 'DON12345'
+        paymentUrl:
+          type: string
+          example: 'https://paymentgateway.com/pay/DON12345'
+        counterAccountName:
+          type: string
+          example: 'John Doe'
+        counterAccountNumber:
+          type: string
+          example: '123456789'
+        transactionDateTime:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum:
+            - PENDING
+            - COMPLETED
+            - FAILED
+          example: 'COMPLETED'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    TopDonor:
+      type: object
+      properties:
+        user:
+          type: object
+          properties:
+            _id:
+              type: string
+              example: '60d21b4667d0d8992e610c81'
+            name:
+              type: string
+              example: 'John Doe'
+            email:
+              type: string
+              example: 'johndoe@example.com'
+        totalAmount:
+          type: number
+          example: 500.0
+
+    Campaign:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: '60d21b4667d0d8992e610c99'
+        user:
+          type: string
+          example: '60d21b4667d0d8992e610c81'
+        title:
+          type: string
+          example: 'Save the Stray Animals'
+        description:
+          type: string
+          example: 'A campaign to help stray animals find a home.'
+        startDate:
+          type: string
+          format: date
+          example: '2025-01-01'
+        endDate:
+          type: string
+          format: date
+          example: '2025-12-31'
+        targetAmount:
+          type: number
+          example: 5000.0
+        currentAmount:
+          type: number
+          example: 1200.0
+        image:
+          type: string
+          example: 'https://example.com/campaign.jpg'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CampaignRequest:
+      type: object
+      required:
+        - title
+        - description
+        - startDate
+        - endDate
+        - targetAmount
+        - image
+      properties:
+        title:
+          type: string
+          example: 'Save the Stray Animals'
+        description:
+          type: string
+          example: 'A campaign to help stray animals find a home.'
+        startDate:
+          type: string
+          format: date
+          example: '2025-01-01'
+        endDate:
+          type: string
+          format: date
+          example: '2025-12-31'
+        targetAmount:
+          type: number
+          example: 5000.0
+        image:
+          type: string
+          example: 'https://example.com/campaign.jpg'
+
+    Blog:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: '60d21b4667d0d8992e610c99'
+        title:
+          type: string
+          example: 'How to Take Care of a Cat'
+        content:
+          type: string
+          example: 'Taking care of a cat requires daily feeding, grooming, and playtime.'
+        category:
+          type: string
+          enum: ['Dogs', 'Cats']
+          example: 'Cats'
+        thumbnail:
+          type: string
+          example: 'https://example.com/blog-thumbnail.jpg'
+        author:
+          type: object
+          properties:
+            _id:
+              type: string
+              example: '60d21b4667d0d8992e610c81'
+            username:
+              type: string
+              example: 'john_doe'
+        likes:
+          type: array
+          items:
+            type: string
+          example: ['60d21b4667d0d8992e610c90', '60d21b4667d0d8992e610c91']
+        comments:
+          type: array
+          items:
+            type: string
+          example: ['60d21b4667d0d8992e610c92', '60d21b4667d0d8992e610c93']
+        isPublished:
+          type: boolean
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    BlogRequest:
+      type: object
+      required:
+        - title
+        - content
+        - category
+        - thumbnail
+      properties:
+        title:
+          type: string
+          example: 'How to Take Care of a Cat'
+        content:
+          type: string
+          example: 'Taking care of a cat requires daily feeding, grooming, and playtime.'
+        category:
+          type: string
+          enum: ['Dogs', 'Cats']
+          example: 'Cats'
+        thumbnail:
+          type: string
+          format: binary
+
+    AuthRegisterRequest:
+      type: object
+      required: [username, email, password]
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+
+    AuthLoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+
+    AuthRefreshTokenRequest:
+      type: object
+      required: [refresh_token]
+      properties:
+        refresh_token:
+          type: string
+
+    AuthResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+
+    AdoptionPost:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        caption:
+          type: string
+          example: 'Looking for a loving home for this adorable puppy!'
+        image:
+          type: array
+          items:
+            type: string
+            format: uri
+        video:
+          type: array
+          items:
+            type: string
+            format: uri
+        pet:
+          type: string
+          format: uuid
+        adopt_status:
+          type: string
+          enum: [Available, Pending, Adopted]
+          default: Available
+        author:
+          type: string
+          format: uuid
+        likes:
+          type: array
+          items:
+            type: string
+            format: uuid
+        tags:
+          type: array
+          items:
+            type: string
+            format: uuid
+        isDeleted:
+          type: boolean
+          default: false
+        isBlocked:
+          type: boolean
+          default: false
+        isApproved:
+          type: boolean
+          default: false
+        isRejected:
+          type: boolean
+          default: false
+        isHidden:
+          type: boolean
+          default: false
+      required:
+        - image
+        - pet
+        - adopt_status
+        - author
+
+    AdminStatsResponse:
+      type: object
+      properties:
+        user:
+          type: integer
+          description: Total number of users
+        donations:
+          type: array
+          items:
+            type: object
+            properties:
+              month:
+                type: string
+                description: Month name
+              total:
+                type: number
+                description: Total donation amount for the month
+
+tags:
+  - name: User
+    description: Endpoints related to user management
+  - name: Post
+    description: Endpoints related to post management
+  - name: Pet
+    description: Endpoints related to pet management
+  - name: Notification
+    description: Endpoints related to notification management
+  - name: Payment
+    description: Endpoints related to payment management
+  - name: Messages
+    description: Endpoints related to messages management
+  - name: Donations
+    description: Endpoints related to donations management
+  - name: Campaigns
+    description: Endpoints related to campaigns management
+  - name: Blogs
+    description: Endpoints related to blogs management
+  - name: Auth
+    description: Endpoints related to auth management
+
+paths:
+  /users/{username}/profile:
+    get:
+      tags:
+        - User
+      summary: Get user profile by username
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: User profile fetched successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  /users/id/{id}/profile:
+    get:
+      tags:
+        - User
+      summary: Get user profile by ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: User profile fetched successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  /users/profile/edit:
+    post:
+      tags:
+        - User
+      summary: Edit user profile
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                profilePicture:
+                  type: string
+                  format: binary
+                username:
+                  type: string
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                bio:
+                  type: string
+      responses:
+        200:
+          description: User profile updated successfully
+
+  /users/suggested:
+    get:
+      tags:
+        - User
+      summary: Get suggested users
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: Suggested users fetched successfully
+
+  /users/followorunfollow/{id}:
+    post:
+      tags:
+        - User
+      summary: Follow or unfollow a user
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: User followed or unfollowed successfully
+
+  /users/chat-users:
+    get:
+      tags:
+        - User
+      summary: Get chat users
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: Chat users fetched successfully
+
+  /users/all:
+    get:
+      tags:
+        - User
+      summary: Get all users
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: All users fetched successfully
+
+  /post/addpost:
+    post:
+      tags:
+        - Post
+      summary: Add a new post
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Post'
+      responses:
+        '201':
+          description: Post created successfully
+        '400':
+          description: Invalid request data
+
+  /post/all:
+    get:
+      tags:
+        - Post
+      summary: Get all posts
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of posts
+          
+  /userpost/all:
+    get:
+      tags:
+        - Post
+      summary: Get all posts of the authenticated user
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Posts fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Posts fetched successfully."
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        _id:
+                          type: string
+                          example: "60f7b2f8a5d3c70015d6f7a9"
+                        author:
+                          type: object
+                          properties:
+                            username:
+                              type: string
+                              example: "john_doe"
+                            profilePicture:
+                              type: string
+                              example: "https://example.com/profile.jpg"
+                            isVerified:
+                              type: boolean
+                              example: true
+                        comments:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              _id:
+                                type: string
+                                example: "60f7b3d8a5d3c70015d6f7b0"
+                              author:
+                                type: object
+                                properties:
+                                  username:
+                                    type: string
+                                    example: "jane_doe"
+                                  profilePicture:
+                                    type: string
+                                    example: "https://example.com/profile2.jpg"
+                                  isVerified:
+                                    type: boolean
+                                    example: false
+                              content:
+                                type: string
+                                example: "Great post!"
+                              createdAt:
+                                type: string
+                                format: date-time
+                                example: "2024-02-28T12:34:56.789Z"
+                        createdAt:
+                          type: string
+                          format: date-time
+                          example: "2024-02-28T12:00:00.000Z"
+        "401":
+          description: Unauthorized, authentication required
+        "500":
+          description: Internal server error
+
+  /post/{id}/like:
+    put:
+      tags:
+        - Post
+      summary: Like a post
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Post liked successfully
+
+  /post/{id}/dislike:
+    put:
+      tags:
+        - Post
+      summary: Dislike a post
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Post disliked successfully
+
+  /post/{id}/comment:
+    post:
+      tags:
+        - Post
+      summary: Add a comment to a post
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Post'
+      responses:
+        '201':
+          description: Comment added successfully
+          
+  /{id}/comment/all:
+    post:
+      tags:
+        - Post
+      summary: Get all comments of a post
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the post to fetch comments for
+      responses:
+        "200":
+          description: Comments fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  comments:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        _id:
+                          type: string
+                          example: "60f7b3d8a5d3c70015d6f7b0"
+                        author:
+                          type: object
+                          properties:
+                            username:
+                              type: string
+                              example: "jane_doe"
+                            profilePicture:
+                              type: string
+                              example: "https://example.com/profile2.jpg"
+                            isVerified:
+                              type: boolean
+                              example: false
+                        content:
+                          type: string
+                          example: "Great post!"
+                        createdAt:
+                          type: string
+                          format: date-time
+                          example: "2024-02-28T12:34:56.789Z"
+        "404":
+          description: No comments found for this post
+        "500":
+          description: Internal server error
+          
+  /{id}/getpostbyid:
+    get:
+      tags:
+        - Post
+      summary: Get a post by its ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the post to fetch
+      responses:
+        "200":
+          description: Post fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Post fetched successfully."
+                  data:
+                    type: object
+                    properties:
+                      _id:
+                        type: string
+                        example: "60f7b2f8a5d3c70015d6f7a9"
+                      author:
+                        type: object
+                        properties:
+                          username:
+                            type: string
+                            example: "john_doe"
+                          profilePicture:
+                            type: string
+                            example: "https://example.com/profile.jpg"
+                          isVerified:
+                            type: boolean
+                            example: true
+                      likes:
+                        type: array
+                        items:
+                          type: string
+                          example: "60f7b4e8a5d3c70015d6f7c1"
+                      comments:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            _id:
+                              type: string
+                              example: "60f7b3d8a5d3c70015d6f7b0"
+                            author:
+                              type: object
+                              properties:
+                                username:
+                                  type: string
+                                  example: "jane_doe"
+                                profilePicture:
+                                  type: string
+                                  example: "https://example.com/profile2.jpg"
+                                isVerified:
+                                  type: boolean
+                                  example: false
+                            content:
+                              type: string
+                              example: "Great post!"
+                            createdAt:
+                              type: string
+                              format: date-time
+                              example: "2024-02-28T12:34:56.789Z"
+        "404":
+          description: Post not found
+        "500":
+          description: Internal server error
+  
+  /{id}:
+    delete:
+      tags:
+        - Post  
+      summary: Delete a post by its ID
+      security:
+        - BearerAuth: []
+      
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the post to delete
+      responses:
+        "200":
+          description: Post deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Post deleted"
+        "403":
+          description: Unauthorized action
+        "404":
+          description: Post not found
+        "500":
+          description: Internal server error
+
+  /post/{id}/bookmark:
+    get:
+      tags:
+        - Post
+      summary: Bookmark or unbookmark a post
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Post bookmarked/unbookmarked successfully
+
+  /pets/add:
+    post:
+      tags:
+        - Pet
+      summary: Add a new pet
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Pet'
+      responses:
+        201:
+          description: Pet added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pet'
+
+  /pets/update/{petId}:
+    post:
+      tags:
+        - Pet
+      summary: Update an existing pet
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          description: The ID of the pet to update
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: The name of the pet
+                age:
+                  type: integer
+                  description: The age of the pet
+                breed:
+                  type: string
+                  description: The breed of the pet
+                status:
+                  type: string
+                  enum: [add_image, update_info]
+                  description: Specify if adding images or updating info
+                image_url:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                  description: Array of image files
+      responses:
+        200:
+          description: Pet updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  data:
+                    type: object
+        400:
+          description: Bad request (e.g., missing pet ID, invalid format)
+        404:
+          description: Pet not found
+        500:
+          description: Internal server error
+
+  /pets/delete/{id}:
+    delete:
+      tags:
+        - Pet
+      summary: Delete a pet
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Pet deleted successfully
+
+  /pets/submit:
+    post:
+      tags:
+        - Pet
+      summary: Submit a pet for approval
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Pet'
+      responses:
+        201:
+          description: Pet submitted successfully, pending approval
+
+  /pets/approve/{petId}:
+    post:
+      tags:
+        - Pet
+      summary: Approve a pet listing
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Pet approved successfully
+          
+  /not-approved:
+    get:
+      tags:
+        - Pet 
+      summary: Get all unapproved pets
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Unapproved pets fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        _id:
+                          type: string
+                          example: "60f7b6e8a5d3c70015d6f7d2"
+                        submittedBy:
+                          type: string
+                          example: "60f7b2f8a5d3c70015d6f7a9"
+                        isApproved:
+                          type: boolean
+                          example: false
+        "500":
+          description: Internal server error
+          
+  /approved:
+    get:
+      tags:
+        - Pet
+      summary: Get approved pets
+      security:
+        - BearerAuth: []
+      description: Retrieves all pets that have been approved.
+      responses:
+        200:
+          description: List of approved pets retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      type: object
+        500:
+          description: Internal server error
+
+
+  /pets/request/{petId}:
+    post:
+      tags:
+        - Pet
+      summary: Request to adopt a pet
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Adoption request sent successfully
+
+  /pets/adopt/{petId}:
+    post:
+      tags:
+        - Pet
+      summary: Adopt a pet
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Pet adopted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: 'Pet adopted successfully'
+
+  /notifications/all:
+    get:
+      tags:
+        - Notification
+      summary: Get all notifications for the authenticated user
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: q
+          in: query
+          schema:
+            type: string
+          description: Search query for filtering notifications by message
+        - name: page
+          in: query
+          schema:
+            type: integer
+          description: Page number for pagination
+        - name: limit
+          in: query
+          schema:
+            type: integer
+          description: Number of notifications per page
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+          description: Field to sort by
+      responses:
+        '200':
+          description: List of notifications retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  notifications:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Notification'
+
+  /payment/member/create-payment-link:
+    post:
+      tags:
+        - Payment
+      summary: Create a payment link for a member
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePaymentRequest'
+      responses:
+        '200':
+          description: Payment link created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentLinkResponse'
+
+  /payment/cancel-payment-link:
+    put:
+      tags:
+        - Payment
+      summary: Cancel a payment link
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancelPaymentRequest'
+      responses:
+        '200':
+          description: Payment link canceled successfully
+
+  /payment/receive-hook:
+    post:
+      tags:
+        - Payment
+      summary: Receive webhook from payment provider
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentWebhook'
+      responses:
+        '200':
+          description: Webhook processed successfully
+
+  /messages/{id}:
+    post:
+      tags:
+        - Messages
+      summary: Send a message
+      description: Send a message from the authenticated user to another user
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The receiver's user ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                textMessage:
+                  type: string
+                  example: 'Hello, how are you?'
+      responses:
+        '201':
+          description: Message sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  newMessage:
+                    $ref: '#/components/schemas/Message'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+
+    get:
+      tags:
+        - Messages
+      summary: Get messages between two users
+      description: Retrieve messages between the authenticated user and another user
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The other participant's user ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Messages fetched successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Message'
+        '404':
+          description: No conversation found
+
+  /donations:
+    get:
+      tags:
+        - Donations
+      summary: Get all donations
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: q
+          in: query
+          schema:
+            type: string
+          description: Search query for donations
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+          description: Page number for pagination
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 5
+          description: Number of donations per page
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+            default: createdAt
+          description: Field to sort the donations by
+      responses:
+        "200":
+          description: Donations fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "All donations fetched successfully."
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        _id:
+                          type: string
+                          example: "60f7b2f8a5d3c70015d6f7a9"
+                        campaign:
+                          type: string
+                          example: "Save the Rainforest"
+                        amount:
+                          type: number
+                          example: 100.50
+                        createdAt:
+                          type: string
+                          format: date-time
+                          example: "2024-02-28T12:00:00.000Z"
+        "500":
+          description: Internal server error
+          
+  /donations/{id}:
+    get:
+      tags:
+        - Donations
+      summary: Get donations by user ID
+      security:
+        - BearerAuth: []
+      description: Retrieves donations made by a specific user.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the user
+          schema:
+            type: string
+        - name: q
+          in: query
+          required: false
+          description: Search query
+          schema:
+            type: string
+        - name: page
+          in: query
+          required: false
+          description: Page number for pagination
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          required: false
+          description: Number of results per page
+          schema:
+            type: integer
+        - name: sortBy
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: List of donations retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      type: object
+        400:
+          description: Bad request (e.g., invalid user ID format)
+        500:
+          description: Internal server error
+
+
+  /donations/top-5:
+    get:
+      tags:
+        - Donations
+      summary: Get the top 5 donors
+      description: Retrieve the top 5 donors for an active campaign
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Top 5 donors retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TopDonor'
+        '404':
+          description: No active campaign found
+        '401':
+          description: Unauthorized
+
+  /campaigns:
+    post:
+      tags:
+        - Campaigns
+      summary: Create a new campaign
+      description: Create a new fundraising campaign.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CampaignRequest'
+      responses:
+        '201':
+          description: Campaign created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Campaign'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+          
+    get:
+      tags:
+        - Campaigns
+      summary: Get all campaigns
+      security:
+        - BearerAuth: []
+      description: Retrieves a list of campaigns, accessible only by admin users.
+      parameters:
+        - name: q
+          in: query
+          required: false
+          description: Search query
+          schema:
+            type: string
+        - name: page
+          in: query
+          required: false
+          description: Page number for pagination
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          required: false
+          description: Number of results per page
+          schema:
+            type: integer
+        - name: sortBy
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: List of campaigns retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      type: object
+        403:
+          description: Forbidden (Only admins can access this resource)
+        500:
+          description: Internal server error
+
+
+  /campaigns/current:
+    get:
+      tags:
+        - Campaigns
+      summary: Get the current active campaign
+      description: Retrieve the campaign that is currently running.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Current campaign retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Campaign'
+        '404':
+          description: No active campaign found
+        '401':
+          description: Unauthorized
+  
+  /campaigns/{id}:
+    delete:
+      security:
+        - BearerAuth: []
+      tags:
+        - Campaigns
+      summary: Stop a campaign
+      description: Marks a campaign as inactive (soft delete), only accessible by admin users.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the campaign to stop
+          schema:
+            type: string
+      responses:
+        200:
+          description: Campaign stopped successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        403:
+          description: Forbidden (Only admins can access this resource)
+        404:
+          description: Campaign not found
+        500:
+          description: Internal server error
+
+  
+  /blogs/create:
+    post:
+      tags:
+        - Blogs
+      summary: Create a new blog
+      description: Creates a new blog post with an image thumbnail.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BlogRequest'
+      responses:
+        '201':
+          description: Blog created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Blog'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+          
+  /breeds:
+    post:
+      tags:
+        - Breeds
+      security:
+        - BearerAuth: []
+      summary: Create a new breed
+      description: Creates a new pet breed, accessible only by service staff.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: The name of the breed
+                description:
+                  type: string
+                  description: A brief description of the breed
+                image:
+                  type: string
+                  format: binary
+                  description: Image file of the breed
+      responses:
+        201:
+          description: Breed created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  data:
+                    type: object
+        403:
+          description: Forbidden (Only service staff can create a breed)
+        500:
+          description: Internal server error
+    get:
+      tags:
+        - Breeds
+      summary: Get all breeds
+      description: Retrieves a list of all pet breeds.
+      responses:
+        200:
+          description: List of breeds retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      type: object
+        500:
+          description: Internal server error      
+    
+
+
+  /blogs/all:
+    get:
+      tags:
+        - Blogs
+      summary: Get all blogs
+      description: Retrieve all blog posts with optional pagination and filtering.
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+          description: Page number for pagination
+        - name: limit
+          in: query
+          schema:
+            type: integer
+          description: Number of blogs per page
+        - name: q
+          in: query
+          schema:
+            type: string
+          description: Search query for blog title or content
+      responses:
+        '200':
+          description: Blogs retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Blog'
+
+  /blogs/{id}:
+    get:
+      tags:
+        - Blogs
+      summary: Get a blog by ID
+      description: Retrieve a single blog post by its ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Blog ID
+      responses:
+        '200':
+          description: Blog retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Blog'
+        '404':
+          description: Blog not found
+
+    put:
+      tags:
+        - Blogs
+      summary: Update a blog
+      description: Update a blog post by ID. Requires authentication.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Blog ID
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BlogRequest'
+      responses:
+        '200':
+          description: Blog updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Blog'
+        '403':
+          description: Unauthorized to update this blog
+        '404':
+          description: Blog not found
+
+    delete:
+      tags:
+        - Blogs
+      summary: Delete a blog
+      description: Deletes a blog post by ID. Requires authentication.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Blog ID
+      responses:
+        '200':
+          description: Blog deleted successfully
+        '403':
+          description: Unauthorized to delete this blog
+        '404':
+          description: Blog not found
+
+  /auth/register:
+    post:
+      tags:
+        - Auth
+      summary: User registration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthRegisterRequest'
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Invalid input or email already exists
+
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: User login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthLoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Invalid credentials
+
+  /auth/logout:
+    post:
+      tags:
+        - Auth
+      summary: User logout
+      responses:
+        '200':
+          description: Logout successful
+
+  /auth/refresh-token:
+    post:
+      tags:
+        - Auth
+      summary: Refresh access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthRefreshTokenRequest'
+      responses:
+        '200':
+          description: New access token issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid or expired refresh token
+          
+  /adoption-posts:
+    get:
+      tags:
+        - AdoptionPost
+      summary: Get all adoption posts
+      security:
+        - BearerAuth: []
+      description: Retrieves a list of all adoption posts.
+      responses:
+        200:
+          description: List of adoption posts retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      type: object
+        500:
+          description: Internal server error
+
+  /adoption-post/all:
+    get:
+      summary: Get all adoption posts
+      tags:
+        - AdoptionPost
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: sortBy
+          in: query
+          description: Field to sort by
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: Number of posts to return
+          schema:
+            type: integer
+            default: 5
+        - name: page
+          in: query
+          description: Page number
+          schema:
+            type: integer
+            default: 1
+        - name: q
+          in: query
+          description: Search query for post captions
+          schema:
+            type: string
+      responses:
+        200:
+          description: Successfully fetched adoption posts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AdoptionPost'
+        401:
+          description: Unauthorized
+
+  /adoption-posts/{id}:
+    put:
+      tags:
+        - AdoptionPost
+      summary: Update an adoption post
+      security:
+        - BearerAuth: []
+      description: Allows a user to update an adoption post with media uploads.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the adoption post to update
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                caption:
+                  type: string
+                  description: Caption for the adoption post
+                location:
+                  type: string
+                  description: Location of the adoption post
+                adopt_status:
+                  type: string
+                  description: Status of the adoption
+                existingImages:
+                  type: string
+                  description: JSON array of existing image URLs to retain
+                media:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                  description: Array of new media files (images/videos)
+      responses:
+        200:
+          description: Adoption post updated successfully
+        400:
+          description: Bad request (e.g., missing required fields, invalid media format)
+        404:
+          description: Adoption post not found
+        500:
+          description: Internal server error
+
+  /adoption-posts/form:
+    get:
+      summary: Get all adoption forms
+      tags:
+        - AdoptionPost
+      security:
+        - BearerAuth: []
+      description: Retrieves a list of adoption forms with optional filters.
+      parameters:
+        - name: status
+          in: query
+          required: false
+          description: Filter by adoption form status
+          schema:
+            type: string
+      responses:
+        200:
+          description: List of adoption forms retrieved successfully
+        500:
+          description: Internal server error
+
+    post:
+      tags:
+        - AdoptionPost
+      summary: Create an adoption form
+      security:
+        - BearerAuth: []
+      description: Allows a user to create an adoption form for a pet.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                adoptionPost:
+                  type: string
+                  description: The ID of the adoption post
+                pet:
+                  type: string
+                  description: The ID of the pet
+                user:
+                  type: string
+                  description: The ID of the user submitting the form
+                adopter:
+                  type: string
+                  description: The adopter's details
+                message:
+                  type: string
+                  description: Additional message for the adoption request
+      responses:
+        201:
+          description: Adoption form created successfully
+        400:
+          description: Bad request (e.g., missing required fields)
+        500:
+          description: Internal server error
+
+  /adoption-posts/breed/{breedId}:
+    get:
+      tags:
+        - AdoptionPost
+      summary: Get posts by breed
+      security:
+        - BearerAuth: []
+      description: Retrieves adoption posts filtered by pet breed.
+      parameters:
+        - name: breedId
+          in: path
+          required: true
+          description: The ID of the breed
+          schema:
+            type: string
+      responses:
+        200:
+          description: List of adoption posts retrieved successfully
+        404:
+          description: Breed not found
+        500:
+          description: Internal server error
+
+
+  /admin/stats:
+    get:
+      tags:
+        - Admin
+      summary: Get platform statistics
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Statistics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminStatsResponse'
+        '403':
+          description: Unauthorized access
+
+  /admin/staffs:
+    get:
+      tags:
+        - Admin
+      summary: Get all staff members
+      description: Retrieve a list of staff members with pagination, sorting, and filtering.
+      parameters:
+        - name: q
+          in: query
+          description: Search query for filtering by username.
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: Page number for pagination.
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          description: Number of items per page.
+          schema:
+            type: integer
+            default: 5
+        - name: sortBy
+          in: query
+          description: Field to sort the results by.
+          schema:
+            type: string
+            default: createdAt
+      responses:
+        '200':
+          description: Successfully retrieved staff members.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: 'Staff members retrieved successfully'
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        _id:
+                          type: string
+                          example: '60d0fe4f5311236168a109ca'
+                        username:
+                          type: string
+                          example: 'staffUser123'
+                        role:
+                          type: string
+                          enum: [SERVICE_STAFF, FORUM_STAFF]
+                          example: 'SERVICE_STAFF'
+                        isActive:
+                          type: boolean
+                          example: true
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: error
+                  message:
+                    type: string
+                    example: 'Failed to fetch staffs'

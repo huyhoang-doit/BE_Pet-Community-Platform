@@ -7,6 +7,8 @@ const User = require('../models/user.model')
 const AdoptionPost = require('../models/adoptionPost.model')
 const { ADOPTION_POST_STATUS } = require('../constants/enums')
 const PeriodicCheck = require('../models/periodicCheck.model')
+const cloudinaryService = require('../utils/cloudinary')
+const Pet = require('../models/pet.model')
 
 class AdoptionFormController {
   createAdoptionForm = catchAsync(async (req, res) => {
@@ -37,91 +39,185 @@ class AdoptionFormController {
 
   // Get all adoption forms
   async getAll(req, res) {
-    const { sortBy, limit, page, q, status, ...filters } = req.query
+    try {
+      const { sortBy, limit, page, q, status, ...filters } = req.query
 
-    const options = {
-      sortBy: sortBy || 'createdAt',
-      limit: limit ? parseInt(limit) : 5,
-      page: page ? parseInt(page) : 1,
-      allowSearchFields: ['message'],
-      q: q ?? '',
-      populate: 'adoptionPost,pet,user'
+      const options = {
+        sortBy: sortBy || 'createdAt',
+        limit: limit ? parseInt(limit) : 5,
+        page: page ? parseInt(page) : 1,
+        allowSearchFields: ['message'],
+        q: q ?? ''
+      }
+
+      if (status) {
+        filters.status = status
+      }
+
+      // Get paginated results without populate first
+      const adoptionForms = await adoptionFormRepo.getAll(filters, options)
+
+      // Then populate all required fields
+      const populatedResults = await Promise.all(
+        adoptionForms.results.map(async (form) => {
+          const populatedForm = await AdoptionForm.findById(form._id)
+            .populate('adoptionPost')
+            .populate('pet')
+            .populate('user')
+            .populate({
+              path: 'periodicChecks',
+              populate: {
+                path: 'checkedBy',
+                select: 'username email'
+              }
+            })
+            .lean(); // Convert to plain JavaScript object
+
+          // Validate and clean up populated data
+          if (populatedForm) {
+            // Handle periodicChecks
+            populatedForm.periodicChecks = populatedForm.periodicChecks.map(check => ({
+              ...check,
+              checkedBy: check.checkedBy ? {
+                _id: check.checkedBy._id,
+                username: check.checkedBy.username || 'N/A',
+                email: check.checkedBy.email || 'N/A'
+              } : null,
+              image_url: check.image_url || '',
+              notes: check.notes || ''
+            }));
+
+            // Handle other populated fields
+            populatedForm.adoptionPost = populatedForm.adoptionPost || null;
+            populatedForm.pet = populatedForm.pet || null;
+            populatedForm.user = populatedForm.user || null;
+          }
+
+          return populatedForm;
+        })
+      );
+
+      // Filter out any null results
+      const validResults = populatedResults.filter(result => result !== null);
+
+      // Replace the results with populated data
+      adoptionForms.results = validResults;
+
+      return OK(res, ADOPTION_FORM_MESSAGE.FETCH_ALL_SUCCESS, adoptionForms)
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: 'Internal server error while fetching adoption forms',
+        error: error.message
+      })
     }
-
-    if (status) {
-      filters.status = status
-    }
-
-    const adoptionForms = await adoptionFormRepo.getAll(filters, options)
-    return OK(res, ADOPTION_FORM_MESSAGE.FETCH_ALL_SUCCESS, adoptionForms)
   }
 
   async checkPeriodic(req, res) {
-    const { adoptionFormId, checkDate, status, notes, checkedBy } = req.body
-    console.log(adoptionFormId, checkDate, status, notes, checkedBy)
-    const periodicCheck = new PeriodicCheck({
-      adoptionFormId,
-      checkDate,
-      status,
-      notes,
-      checkedBy
-    })
+    try {
+      const { adoptionFormId, checkDate, status, notes, checkedBy } = req.body
+      
+      
+      let imageUrl = '';
+      if (req.file) {
+        try {
+          imageUrl = await cloudinaryService.uploadImage(req.file.buffer);
+        } catch (uploadError) {
+          return res.status(400).json({
+            success: false,
+            message: 'Error uploading image'
+          });
+        }
+      }
 
-    const savedPeriodicCheck = await periodicCheck.save()
-    if(savedPeriodicCheck) {
-      const adoptionForm = await AdoptionForm.findById(adoptionFormId)
-      adoptionForm.periodicChecks.push(savedPeriodicCheck._id)
-      await adoptionForm.save()
+      const periodicCheck = new PeriodicCheck({
+        adoptionFormId,
+        checkDate,
+        status,
+        notes,
+        checkedBy,
+        image_url: imageUrl
+      });
+
+
+      const savedPeriodicCheck = await periodicCheck.save()
+      if(savedPeriodicCheck) {
+        const adoptionForm = await AdoptionForm.findById(adoptionFormId)
+        
+        // If this is the first check and form is approved, set next check date
+        if (adoptionForm.periodicChecks.length === 0 && adoptionForm.status === 'Approved') {
+          if (!adoptionForm.approved_date) {
+            adoptionForm.approved_date = new Date()
+          }
+          // Set next check date to 1 month from now
+          const nextCheckDate = new Date()
+          nextCheckDate.setMonth(nextCheckDate.getMonth() + 1)
+          adoptionForm.next_check_date = nextCheckDate
+        } else if (adoptionForm.periodicChecks.length === 1) {
+          // After first check is completed, set next check date for second check
+          const nextCheckDate = new Date()
+          nextCheckDate.setMonth(nextCheckDate.getMonth() + 1)
+          adoptionForm.next_check_date = nextCheckDate
+        } else if (adoptionForm.periodicChecks.length === 2) {
+          // After second check is completed, set next check date for final check
+          const nextCheckDate = new Date()
+          nextCheckDate.setMonth(nextCheckDate.getMonth() + 1)
+          adoptionForm.next_check_date = nextCheckDate
+        } else if (adoptionForm.periodicChecks.length === 3) {
+          // After final check, clear next check date
+          adoptionForm.next_check_date = null
+        }
+
+        adoptionForm.periodicChecks.push(savedPeriodicCheck._id)
+        await adoptionForm.save()
+      }
+
+      // Populate the checkedBy field before sending response
+      const populatedCheck = await PeriodicCheck.findById(savedPeriodicCheck._id)
+        .populate('checkedBy', 'name email')
+        .exec();
+
+      return OK(res, ADOPTION_FORM_MESSAGE.ADD_PERIODIC_CHECK_SUCCESS, populatedCheck)
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: 'Internal server error while processing periodic check'
+      });
     }
-
-    return OK(res, ADOPTION_FORM_MESSAGE.ADD_PERIODIC_CHECK_SUCCESS, savedPeriodicCheck)
   }
 
-  // Get single adoption form
-  //   async getById(req, res) {
-  //     const { id } = req.params
-  //     const adoptionForm = await adoptionFormRepo.getById(id)
+  updateAdoptionFormStatus = async (req, res) => {
+    const { formId } = req.params;
+    const { status } = req.body;
 
-  //     if (!adoptionForm) {
-  //       throw new NotFoundError('Adoption form not found')
-  //     }
+    if (!['Pending', 'Approved', 'Rejected'].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid status value',
+      });
+    }
 
-  //     return res.status(200).json({
-  //       success: true,
-  //       data: adoptionForm
-  //     })
-  //   }
+    const updatedForm = await AdoptionForm.findByIdAndUpdate(
+      formId,
+      { status },
+      { new: true }
+    ).populate('adopter pet adoptionPost user');
 
-  // Update adoption form
-  //   async update(req, res) {
-  //     const { id } = req.params
-  //     const updateData = req.body
+    if(updatedForm.status === 'Rejected') {
+      await Pet.findByIdAndUpdate(updatedForm.pet, { $set: { isAdopted: false, isAddPost: false } })
+    }
+    if(updatedForm.status === 'Approved') {
+      await Pet.findByIdAndUpdate(updatedForm.pet, { $set: { isAdopted: true } })
+    }
 
-  //     const adoptionForm = await adoptionFormRepo.update(id, updateData)
-  //     if (!adoptionForm) {
-  //       throw new NotFoundError('Adoption form not found')
-  //     }
-
-  //     return res.status(200).json({
-  //       success: true,
-  //       data: adoptionForm
-  //     })
-  //   }
-
-  // Delete adoption form
-  //   async delete(req, res) {
-  //     const { id } = req.params
-  //     const adoptionForm = await adoptionFormRepo.delete(id)
-
-  //     if (!adoptionForm) {
-  //       throw new NotFoundError('Adoption form not found')
-  //     }
-
-  //     return res.status(200).json({
-  //       success: true,
-  //       message: 'Adoption form deleted successfully'
-  //     })
-  //   }
+    if (!updatedForm) {
+      return res.status(404).json({
+        success: false,
+        message: 'Adoption form not found',
+      });
+    }
+return OK(res, ADOPTION_FORM_MESSAGE.UPDATED_SUCCESS, updatedForm)
+};
 }
 
 module.exports = new AdoptionFormController()

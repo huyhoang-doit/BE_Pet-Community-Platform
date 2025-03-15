@@ -70,6 +70,14 @@ const adoptionFormSchema = new mongoose.Schema(
       enum: ['Pending', 'Approved', 'Rejected'],
       default: 'Pending'
     },
+    approved_date: {
+      type: Date,
+      default: null
+    },
+    next_check_date: {
+      type: Date,
+      default: null
+    },
     periodicChecks: {
       type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'PeriodicCheck' }],
       default: [],
