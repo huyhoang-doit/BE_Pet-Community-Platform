@@ -8,6 +8,9 @@ class AdminService {
 
       const donationAggregation = await Donation.aggregate([
         {
+          $match: { status: 'completed' }
+        },
+        {
           $group: {
             _id: { $month: '$createdAt' }, // Group by month
             total: { $sum: '$amount' } // Sum donations
