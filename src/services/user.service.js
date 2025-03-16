@@ -7,15 +7,37 @@ const { getReceiverSocketId, io } = require('../socket/socket.js')
 
 class UserService {
   getProfile = async (username) => {
-    let user = await User.findOne({ username }).populate(['bookmarks', 'posts'])
-    user.posts.sort((a, b) => b.createdAt - a.createdAt)
-    return user
+    let user = await User.findOne({ username })
+      .populate('bookmarks')
+      .populate({
+        path: 'posts',
+        match: {
+          isApproved: true,
+          isBlocked: false,
+          isHidden: false,
+          isDeleted: false
+        },
+        options: { sort: { createdAt: -1 } }
+      });
+    return user;
   }
+
   getProfileById = async (userId) => {
-    let user = await User.findById(userId).populate(['bookmarks', 'posts'])
-    user.posts.sort((a, b) => b.createdAt - a.createdAt)
-    return user
+    let user = await User.findById(userId)
+      .populate('bookmarks')
+      .populate({
+        path: 'posts',
+        match: {
+          isApproved: true,
+          isBlocked: false,
+          isHidden: false,
+          isDeleted: false
+        },
+        options: { sort: { createdAt: -1 } }
+      });
+    return user;
   }
+
   editProfile = async (userId, updateData, profilePicture) => {
     const user = await User.findById(userId).select('-password')
     if (!user) {
