@@ -37,6 +37,7 @@ class AdminService {
 
   getAllStaffs = async (query, userId) => {
     const { q, page, limit, sortBy } = query
+    
 
     const filter = {
       isActive: true,
@@ -48,22 +49,34 @@ class AdminService {
       limit: limit ? parseInt(limit) : 5,
       page: page ? parseInt(page) : 1,
       sortBy: sortBy || 'createdAt',
-      allowSearchFields: ['username'],
+      allowSearchFields: ['username ', 'email'],
       q: q ?? '',
       fields: '-password'
     }
 
     try {
-      const staffs = await User.find(filter)
-        .select(options.fields) // Exclude password
-        .sort({ [options.sortBy]: -1 }) // Sort in descending order
-        .skip((options.page - 1) * options.limit)
-        .limit(options.limit)
+      const staffs = await User.paginate(filter, options)
 
       return staffs // Ensure the function returns data
     } catch (error) {
       console.error('Error in getAllStaffs:', error)
       throw new Error('Failed to fetch staffs')
+    }
+  }
+
+  createStaffAccount = async (data) => {
+    try {
+      const { firstName, lastName, email, username, password, role } = data
+      if (!firstName || !lastName || !email || !username || !password || !role) {
+        throw new Error('Missing required fields')
+      }
+      const hashedPassword = await User.hashPassword(password)
+      data.password = hashedPassword
+      const staff = await User.create(data)
+      return staff
+    } catch (error) {
+      console.error('Error in createStaffAccount:', error)
+      throw new Error('Failed to create staff account')
     }
   }
 }

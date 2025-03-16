@@ -111,7 +111,8 @@ const NOTIFICATION_MESSAGE = {
 
 const ADMIN_MESSAGE = {
   GET_STATS_SUCCESSFULLY: 'Get stats successfully',
-  GET_ALL_STAFFS_SUCCESSFULLY: 'Get all staffs successfully'
+  GET_ALL_STAFFS_SUCCESSFULLY: 'Get all staffs successfully',
+  CREATE_STAFF_ACCOUNT_SUCCESSFULLY: 'Create staff account successfully'
 }
 
 module.exports = {

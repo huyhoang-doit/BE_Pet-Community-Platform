@@ -13,6 +13,11 @@ class adminController {
     const staffs = await adminService.getAllStaffs(req.query, req.id)
     return OK(res, ADMIN_MESSAGE.GET_ALL_STAFFS_SUCCESSFULLY, staffs)
   }
+
+  createStaffAccount = async (req, res) => {
+    const staff = await adminService.createStaffAccount(req.body)
+    return OK(res, ADMIN_MESSAGE.CREATE_STAFF_ACCOUNT_SUCCESSFULLY, staff)
+  }
 }
 
 module.exports = new adminController()

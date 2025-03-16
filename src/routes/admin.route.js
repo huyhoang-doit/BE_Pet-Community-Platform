@@ -7,5 +7,5 @@ const router = express.Router()
 
 router.get('/stats', isAuthenticated, checkRole(ROLE.ADMIN), adminController.getStats)
 router.get('/staff', isAuthenticated, checkRole(ROLE.ADMIN), adminController.getAllStaffs)
-
+router.post('/staff', isAuthenticated, checkRole(ROLE.ADMIN), adminController.createStaffAccount)
 module.exports = router
