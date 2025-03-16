@@ -15,7 +15,7 @@ const petRoute = require('./pet.route')
 const adminRoute = require('./admin.route')
 const breedRoute = require('./breed.route')
 const chatbotRoute = require('./chatbot.route')
-
+const clientSettingRoute = require('./clientSetting.route')
 const routes = [
   {
     path: '/auth',
@@ -76,6 +76,10 @@ const routes = [
   {
     path: '/chatbot',
     route: chatbotRoute
+  },
+  {
+    path: '/client-setting',
+    route: clientSettingRoute
   }
 ]
 

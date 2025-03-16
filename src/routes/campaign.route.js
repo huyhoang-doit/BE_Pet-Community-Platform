@@ -7,11 +7,11 @@ const { ROLE } = require('../constants/enums.js')
 
 const router = express.Router()
 
-router.route('/').post(isAuthenticated, checkRole(ROLE.ADMIN), upload.single('image'), createCampaign)
-router.route('/current').get(isAuthenticated, currentCampaign)
-router.route('/').get(isAuthenticated, checkRole(ROLE.ADMIN), getCampagins)
-router.route('/:id').delete(isAuthenticated, checkRole(ROLE.ADMIN), stopCampaign)
-router.route('/:id').get(isAuthenticated, getCampaignById)
+router.route('/current').get(currentCampaign)
+router.route('/:id').get(getCampaignById)
 router.route('/:id/donations').get(isAuthenticated, getDonationsByCampaignId)
+router.route('/').get(isAuthenticated, checkRole(ROLE.ADMIN), getCampagins)
+router.route('/').post(isAuthenticated, checkRole(ROLE.ADMIN), upload.single('image'), createCampaign)
+router.route('/:id').delete(isAuthenticated, checkRole(ROLE.ADMIN), stopCampaign)
 
 module.exports = router

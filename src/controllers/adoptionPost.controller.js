@@ -151,7 +151,7 @@ class AdoptionPostController {
     }
   };
 
-  getDeatilPost = async (req, res) => {
+  getDetailPost = async (req, res) => {
     const postId = req.params.id
     const post = await AdoptionPost.findById(postId)
       .populate('author')

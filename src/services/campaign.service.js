@@ -1,3 +1,4 @@
+const { TRANSACTION_STATUS } = require('../constants/enums')
 const Campaign = require('../models/campaign.model')
 const Donation = require('../models/donation.model')
 
@@ -36,8 +37,20 @@ class CampaignService {
     return await Campaign.findById(id).populate('user', 'username profilePicture firstName lastName')
   }
 
-  getDonationsByCampaignId = async (id) => {
-    return await Donation.find({ campaign: id }).populate('user', 'username profilePicture firstName lastName')
+  getDonationsByCampaignId = async (id, query) => {
+    const { sortBy, limit, page, q } = query
+    const filter = {
+      status: TRANSACTION_STATUS.COMPLETED
+    }
+    const options = {
+      sortBy: sortBy || 'createdAt:desc',
+      limit: limit ? parseInt(limit) : 10,
+      page: page ? parseInt(page) : 1,
+      allowSearchFields: ['description', 'message'],
+      q: q ?? '',
+      populate: 'user'
+    }
+    return await Donation.paginate(filter, options)
   }
 }
 

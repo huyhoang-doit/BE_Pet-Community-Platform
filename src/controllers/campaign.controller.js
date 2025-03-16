@@ -53,7 +53,7 @@ class CampaignController {
 
   getDonationsByCampaignId = catchAsync(async (req, res) => {
     const { id } = req.params
-    const donations = await campaignService.getDonationsByCampaignId(id)
+    const donations = await campaignService.getDonationsByCampaignId(id, req.query)
     return OK(res, CAMPAIGN_MESSAGE.GET_DONATIONS_BY_CAMPAIGN_ID_SUCCESSFULLY, donations)
   })
 }
