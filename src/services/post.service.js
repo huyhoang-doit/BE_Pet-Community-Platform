@@ -62,7 +62,13 @@ class PostService {
   }
 
   getUserPost = async (userId) => {
-    return await Post.find({ author: userId })
+    return await Post.find({ 
+      author: userId,
+      isApproved: true,
+      isBlocked: false,
+      isHidden: false,
+      isDeleted: false
+    })
       .sort({ createdAt: -1 })
       .populate({
         path: 'author',
@@ -73,7 +79,7 @@ class PostService {
         sort: { createdAt: -1 },
         populate: {
           path: 'author',
-          select: 'username, profilePicture isVerified'
+          select: 'username profilePicture isVerified'
         }
       })
   }
