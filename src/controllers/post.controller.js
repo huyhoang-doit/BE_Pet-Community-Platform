@@ -288,8 +288,6 @@ class PostController {
   updatePost = async (req, res) => {
     try {
       const postId = req.params.id
-      console.log(req.body)
-      console.log(postId)
       const post = await Post.findById(postId)
       if (!post) return res.status(404).json({ message: 'Post not found', success: false })
       await post.updateOne(req.body)
