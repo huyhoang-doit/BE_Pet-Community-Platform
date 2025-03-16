@@ -34,6 +34,7 @@ class AdoptionFormController {
 
     const savedForm = await adoptionForm.save()
     currentAdoptPost.adopt_status = ADOPTION_POST_STATUS.PENDING
+    await currentAdoptPost.save()
     return CREATED(res, ADOPTION_FORM_MESSAGE.CREATED_SUCCESS, savedForm)
   })
 
