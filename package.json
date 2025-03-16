@@ -14,6 +14,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@google/generative-ai": "^0.24.0",
     "@payos/node": "^1.0.10",
     "bcryptjs": "^2.4.3",
     "cloudinary": "^2.5.1",

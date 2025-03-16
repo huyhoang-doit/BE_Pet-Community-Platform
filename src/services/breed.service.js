@@ -9,6 +9,11 @@ class BreedService {
     const breeds = await Breed.find()
     return breeds
   }
+
+  getBreedById = async (id) => {
+    const breed = await Breed.findById(id)
+    return breed
+  }
 }
 
 module.exports = new BreedService()

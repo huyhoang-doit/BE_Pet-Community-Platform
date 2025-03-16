@@ -32,6 +32,7 @@ router.post(
   PetController.submitPet
 )
 router.get('/breeds', PetController.getBreeds)
+router.get('/breeds/:breedId', PetController.getBreedById)
 router.post('/approve/:petId', isAuthenticated, PetController.adminApprovePet)
 router.get('/not-approved', isAuthenticated, PetController.getPetNotApprove)
 router.get('/approved', isAuthenticated, PetController.getPetApprove)
