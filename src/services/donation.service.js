@@ -96,17 +96,22 @@ class DonationService {
     return await Donation.paginate(filter, options)
   }
 
-  getDonationByUserId = async (userId, query) => {
+  getDonationByUserId = async (user, query) => {
     const { q, page, limit, sortBy } = query
+    const filter = {
+      status: TRANSACTION_STATUS.COMPLETED,
+      user
+    }
+    
     const options = {
       sortBy: sortBy || 'createdAt:desc',
       limit: limit ? parseInt(limit) : 5,
       page: page ? parseInt(page) : 1,
-      allowSearchFields: ['message'],
+      allowSearchFields: ['description', 'message'],
       q: q ?? '',
       populate: 'user,campaign'
     }
-    return await Donation.paginate({ user: userId }, options)
+    return await Donation.paginate(filter, options)
   }
 }
 module.exports = new DonationService()
