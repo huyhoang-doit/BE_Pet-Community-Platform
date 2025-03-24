@@ -32,6 +32,12 @@ const petSchema = new mongoose.Schema(
         ref: 'User'
       }
     ],
+    formRequests: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'AdoptionForm'
+      }
+    ],
     breed: { type: mongoose.Schema.Types.ObjectId, ref: 'Breed', required: true }
   },
   { timestamps: true }
