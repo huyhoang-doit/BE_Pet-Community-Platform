@@ -7,7 +7,9 @@ const NOTIFICAITON_TYPE = {
   FOLLOW: 'follow',
   LIKE: 'like',
   COMMENT: 'comment',
-  APPROVE: 'approve'
+  APPROVE: 'approve',
+  FORM_STATUS_UPDATE: 'form_status_update',
+  CHECK_REQUEST: 'check request'
 }
 
 const ROLE = {
