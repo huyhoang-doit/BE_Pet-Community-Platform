@@ -39,5 +39,6 @@ router.get('/not-approved', isAuthenticated, PetController.getPetNotApprove)
 router.get('/approved', isAuthenticated, PetController.getPetApprove)
 router.post('/adopt/:petId', isAuthenticated, PetController.userAdoptPet)
 router.get('/request/:petId', isAuthenticated, PetController.getRequestAdoptPet)
+router.get('/submitted/:userId', isAuthenticated, PetController.getPetBySubmittedId)
 
 module.exports = router

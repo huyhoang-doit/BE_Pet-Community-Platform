@@ -52,7 +52,7 @@ class AdoptionFormController {
         sortBy: sortBy || 'createdAt',
         limit: limit ? parseInt(limit) : 5,
         page: page ? parseInt(page) : 1,
-        allowSearchFields: ['message'],
+        allowSearchFields: ['reason'],
         q: q ?? ''
       }
 
@@ -98,7 +98,7 @@ class AdoptionFormController {
             // Handle other populated fields
             populatedForm.adoptionPost = populatedForm.adoptionPost || null
             populatedForm.pet = populatedForm.pet || null
-            populatedForm.user = populatedForm.user || null
+            populatedForm.sender = populatedForm.sender || null
           }
 
           return populatedForm
@@ -112,6 +112,105 @@ class AdoptionFormController {
       adoptionForms.results = validResults
 
       return OK(res, ADOPTION_FORM_MESSAGE.FETCH_ALL_SUCCESS, adoptionForms)
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: 'Internal server error while fetching adoption forms',
+        error: error.message
+      })
+    }
+  }
+  async getFormBySenderId(req, res) {
+    try {
+      const senderId = req.params.id
+
+      const { sortBy, limit, page, q, status, ...filters } = req.query
+
+      // Bộ lọc mặc định: chỉ lấy form của senderId
+      const defaultFilters = { sender: senderId }
+
+      // Cấu hình options cho phân trang và tìm kiếm
+      const options = {
+        sortBy: sortBy || 'createdAt', // Sắp xếp mặc định theo createdAt
+        limit: limit ? parseInt(limit) : 5, // Giới hạn mặc định là 5
+        page: page ? parseInt(page) : 1, // Trang mặc định là 1
+        allowSearchFields: ['reason', 'adopter.name', 'adopter.email'], // Các trường cho phép tìm kiếm
+        q: q ?? '' // Chuỗi tìm kiếm, mặc định rỗng
+      }
+
+      // Nếu có status query, thêm vào filter
+      if (status) {
+        filters.status = status
+      }
+
+      // Kết hợp bộ lọc mặc định và bộ lọc từ query
+      const finalFilter = { ...defaultFilters, ...filters }
+
+      // Lấy danh sách adoption forms với phân trang
+      const adoptionForms = await AdoptionForm.paginate(finalFilter, options)
+
+      // Populate các trường liên quan
+      const populatedResults = await Promise.all(
+        adoptionForms.results.map(async (form) => {
+          const populatedForm = await AdoptionForm.findById(form._id)
+            .populate('adoptionPost', 'title description') // Chỉ lấy các trường cần thiết từ AdoptionPost
+            .populate('pet', 'name breed age') // Chỉ lấy các trường cần thiết từ Pet
+            .populate('sender', 'username email') // Chỉ lấy username và email từ User
+            .populate({
+              path: 'periodicChecks',
+              populate: {
+                path: 'checkedBy',
+                select: 'username email'
+              }
+            })
+            .lean()
+
+          if (populatedForm) {
+            // Xử lý periodicChecks để trả về định dạng mong muốn
+            populatedForm.periodicChecks = populatedForm.periodicChecks.map((check) => ({
+              _id: check._id,
+              checkedBy: check.checkedBy
+                ? {
+                    _id: check.checkedBy._id,
+                    username: check.checkedBy.username || 'N/A',
+                    email: check.checkedBy.email || 'N/A'
+                  }
+                : null,
+              image_url: check.image_url || '',
+              notes: check.notes || ''
+            }))
+
+            // Đảm bảo các trường không null
+            populatedForm.adoptionPost = populatedForm.adoptionPost || null
+            populatedForm.pet = populatedForm.pet || null
+            populatedForm.sender = populatedForm.sender || null
+
+            // Thêm thông tin adopter nếu cần
+            populatedForm.adopter = {
+              name: populatedForm.adopter?.name || 'N/A',
+              email: populatedForm.adopter?.email || 'N/A',
+              phone: populatedForm.adopter?.phone || 'N/A',
+              address: {
+                province: populatedForm.adopter?.address?.province || 'N/A',
+                district: populatedForm.adopter?.address?.district || 'N/A',
+                ward: populatedForm.adopter?.address?.ward || 'N/A',
+                detail: populatedForm.adopter?.address?.detail || 'N/A'
+              }
+            }
+          }
+
+          return populatedForm
+        })
+      )
+
+      // Lọc bỏ các kết quả null (nếu có)
+      const validResults = populatedResults.filter((result) => result !== null)
+
+      // Cập nhật results trong adoptionForms
+      adoptionForms.results = validResults
+
+      // Trả về phản hồi thành công
+      return OK(res, ADOPTION_FORM_MESSAGE.FETCH_FORM_BY_SENDER_ID, adoptionForms)
     } catch (error) {
       return res.status(500).json({
         success: false,

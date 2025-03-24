@@ -14,6 +14,7 @@ const checkRole = require('../middlewares/checkRole')
 const { ROLE } = require('../constants/enums')
 
 router.post('/create', isAuthenticated, checkRole(ROLE.USER), AdoptionFormController.createAdoptionForm)
+router.get('/sender/:id', isAuthenticated, checkRole(ROLE.USER), AdoptionFormController.getFormBySenderId)
 router.get('/all', isAuthenticated, checkRole(ROLE.SERVICE_STAFF), AdoptionFormController.getAll)
 router.post(
   '/check',

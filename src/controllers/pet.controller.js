@@ -9,7 +9,6 @@ const { StatusCodes } = require('http-status-codes')
 class PetController {
   addNewPet = catchAsync(async (req, res) => {
     const { petData } = req.body
-    console.log('nice', petData)
     const image_url = req.file
     const imagelUrl = await cloudinaryService.uploadImage(image_url.buffer)
     const newPet = await petService.createPet(petData, imagelUrl)
@@ -75,6 +74,10 @@ class PetController {
   getRequestAdoptPet = catchAsync(async (req, res) => {
     const pet = await petService.requestAdoption(req.id, req.params.petId)
     return OK(res, 'Get request adoption successfully', pet)
+  })
+  getPetBySubmittedId = catchAsync(async (req, res) => {
+    const pet = await petService.getPetBySubmittedId(req.params.userId, req.query)
+    return OK(res, 'Get by submited successfully', pet)
   })
   userAdoptPet = catchAsync(async (req, res) => {
     const pet = await petService.adoptPet(req.id, req.params.petId)
