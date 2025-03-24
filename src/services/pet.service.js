@@ -133,7 +133,6 @@ class PetService {
       populate: 'owner,breed'
     }
 
-
     const finalFilter = { ...defaultFilters, ...filters }
 
     return await petRepo.getAll(finalFilter, options)
@@ -195,10 +194,6 @@ class PetService {
         message: 'You have already requested to adopt this pet'
       })
     }
-
-    pet.adoptionRequests.push(userId)
-    await pet.save()
-
     return pet
   }
 
