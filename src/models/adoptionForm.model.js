@@ -65,6 +65,10 @@ const adoptionFormSchema = new mongoose.Schema(
       trim: true,
       default: ''
     },
+    expected_date: {
+      type: Date,
+      required: [true, 'Expected date of receipt']
+    },
     status: {
       type: String,
       enum: ['Pending', 'Approved', 'Rejected'],

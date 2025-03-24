@@ -19,12 +19,16 @@ router.get('/all', isAuthenticated, checkRole(ROLE.SERVICE_STAFF), AdoptionFormC
 router.post(
   '/check',
   isAuthenticated,
-  checkRole(ROLE.SERVICE_STAFF),
+  checkRole(ROLE.USER),
   upload.single('image_url'),
   AdoptionFormController.checkPeriodic
 )
 router
   .route('/form/:formId')
   .put(isAuthenticated, checkRole(ROLE.SERVICE_STAFF), AdoptionFormController.updateAdoptionFormStatus)
+
+router
+  .route('/alert-check/:formId')
+  .put(isAuthenticated, checkRole(ROLE.SERVICE_STAFF), AdoptionFormController.alertCheckForm)
 
 module.exports = router

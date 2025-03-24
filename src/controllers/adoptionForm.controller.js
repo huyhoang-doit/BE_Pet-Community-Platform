@@ -5,14 +5,16 @@ const { ADOPTION_FORM_MESSAGE } = require('../constants/messages')
 const AdoptionForm = require('../models/adoptionForm.model')
 const User = require('../models/user.model')
 const AdoptionPost = require('../models/adoptionPost.model')
-const { ADOPTION_POST_STATUS } = require('../constants/enums')
+const { ADOPTION_POST_STATUS, NOTIFICAITON_TYPE } = require('../constants/enums')
 const PeriodicCheck = require('../models/periodicCheck.model')
 const cloudinaryService = require('../utils/cloudinary')
 const Pet = require('../models/pet.model')
+const Notification = require('../models/notification.model')
+const { getReceiverSocketId, io } = require('../socket/socket')
 
 class AdoptionFormController {
   createAdoptionForm = catchAsync(async (req, res) => {
-    const { adoptionPost, pet, sender, adopter, reason } = req.body
+    const { adoptionPost, pet, sender, adopter, reason, expectedDate } = req.body
 
     // Optional: Verify that the user exists and is valid
     const adopterUser = await User.findById(sender)
@@ -33,7 +35,8 @@ class AdoptionFormController {
       pet,
       sender,
       adopter,
-      reason
+      reason,
+      expected_date: expectedDate
     })
 
     const savedForm = await adoptionForm.save()
@@ -69,7 +72,7 @@ class AdoptionFormController {
           const populatedForm = await AdoptionForm.findById(form._id)
             .populate('adoptionPost')
             .populate('pet')
-            .populate('user')
+            .populate('sender')
             .populate({
               path: 'periodicChecks',
               populate: {
@@ -77,7 +80,7 @@ class AdoptionFormController {
                 select: 'username email'
               }
             })
-            .lean() // Convert to plain JavaScript object
+            .lean()
 
           // Validate and clean up populated data
           if (populatedForm) {
@@ -120,16 +123,15 @@ class AdoptionFormController {
       })
     }
   }
+
   async getFormBySenderId(req, res) {
     try {
       const senderId = req.params.id
 
       const { sortBy, limit, page, q, status, ...filters } = req.query
 
-      // Bộ lọc mặc định: chỉ lấy form của senderId
       const defaultFilters = { sender: senderId }
 
-      // Cấu hình options cho phân trang và tìm kiếm
       const options = {
         sortBy: sortBy || 'createdAt', // Sắp xếp mặc định theo createdAt
         limit: limit ? parseInt(limit) : 5, // Giới hạn mặc định là 5
@@ -138,24 +140,26 @@ class AdoptionFormController {
         q: q ?? '' // Chuỗi tìm kiếm, mặc định rỗng
       }
 
-      // Nếu có status query, thêm vào filter
       if (status) {
         filters.status = status
       }
 
-      // Kết hợp bộ lọc mặc định và bộ lọc từ query
       const finalFilter = { ...defaultFilters, ...filters }
 
-      // Lấy danh sách adoption forms với phân trang
       const adoptionForms = await AdoptionForm.paginate(finalFilter, options)
 
-      // Populate các trường liên quan
       const populatedResults = await Promise.all(
         adoptionForms.results.map(async (form) => {
           const populatedForm = await AdoptionForm.findById(form._id)
-            .populate('adoptionPost', 'title description') // Chỉ lấy các trường cần thiết từ AdoptionPost
-            .populate('pet', 'name breed age') // Chỉ lấy các trường cần thiết từ Pet
-            .populate('sender', 'username email') // Chỉ lấy username và email từ User
+            .populate('adoptionPost')
+            .populate({
+              path: 'pet',
+              populate: {
+                path: 'breed',
+                select: 'name'
+              }
+            })
+            .populate('sender')
             .populate({
               path: 'periodicChecks',
               populate: {
@@ -166,7 +170,6 @@ class AdoptionFormController {
             .lean()
 
           if (populatedForm) {
-            // Xử lý periodicChecks để trả về định dạng mong muốn
             populatedForm.periodicChecks = populatedForm.periodicChecks.map((check) => ({
               _id: check._id,
               checkedBy: check.checkedBy
@@ -180,12 +183,10 @@ class AdoptionFormController {
               notes: check.notes || ''
             }))
 
-            // Đảm bảo các trường không null
             populatedForm.adoptionPost = populatedForm.adoptionPost || null
             populatedForm.pet = populatedForm.pet || null
             populatedForm.sender = populatedForm.sender || null
 
-            // Thêm thông tin adopter nếu cần
             populatedForm.adopter = {
               name: populatedForm.adopter?.name || 'N/A',
               email: populatedForm.adopter?.email || 'N/A',
@@ -203,13 +204,10 @@ class AdoptionFormController {
         })
       )
 
-      // Lọc bỏ các kết quả null (nếu có)
       const validResults = populatedResults.filter((result) => result !== null)
 
-      // Cập nhật results trong adoptionForms
       adoptionForms.results = validResults
 
-      // Trả về phản hồi thành công
       return OK(res, ADOPTION_FORM_MESSAGE.FETCH_FORM_BY_SENDER_ID, adoptionForms)
     } catch (error) {
       return res.status(500).json({
@@ -291,7 +289,7 @@ class AdoptionFormController {
     }
   }
 
-  updateAdoptionFormStatus = async (req, res) => {
+  async updateAdoptionFormStatus(req, res) {
     const { formId } = req.params
     const { status } = req.body
 
@@ -303,15 +301,8 @@ class AdoptionFormController {
     }
 
     const updatedForm = await AdoptionForm.findByIdAndUpdate(formId, { status }, { new: true }).populate(
-      'adopter pet adoptionPost user'
+      'adopter pet adoptionPost sender'
     )
-
-    if (updatedForm.status === 'Rejected') {
-      await Pet.findByIdAndUpdate(updatedForm.pet, { $set: { isAdopted: false, isAddPost: false } })
-    }
-    if (updatedForm.status === 'Approved') {
-      await Pet.findByIdAndUpdate(updatedForm.pet, { $set: { isAdopted: true } })
-    }
 
     if (!updatedForm) {
       return res.status(404).json({
@@ -319,7 +310,109 @@ class AdoptionFormController {
         message: 'Adoption form not found'
       })
     }
+
+    // Tạo thông báo cho sender dựa trên trạng thái mới
+    let message
+    switch (updatedForm.status) {
+      case 'Approved':
+        message = `Đơn nhận nuôi ${updatedForm.pet.name} của bạn đã được duyệt!`
+        break
+      case 'Rejected':
+        message = `Đơn nhận nuôi ${updatedForm.pet.name} của bạn đã bị từ chối.`
+        break
+      case 'Pending':
+        message = `Đơn nhận nuôi ${updatedForm.pet.name} của bạn đang được xem xét.`
+        break
+      default:
+        message = `Trạng thái đơn nhận nuôi ${updatedForm.pet.name} đã được cập nhật.`
+    }
+
+    const notification = await Notification.create({
+      type: NOTIFICAITON_TYPE.FORM_STATUS_UPDATE,
+      sender: null,
+      recipient: updatedForm.sender._id,
+      post: updatedForm.adoptionPost._id || null,
+      message,
+      read: false
+    })
+
+    const userSocketId = getReceiverSocketId(updatedForm.sender._id.toString())
+    if (userSocketId) {
+      io.to(userSocketId).emit('notification', {
+        ...notification.toObject(),
+        sender: null
+      })
+    }
+
+    // Xử lý khi status là "Approved"
+    if (updatedForm.status === 'Approved') {
+      // 1. Cập nhật tất cả các form khác có cùng pet._id thành "Rejected"
+      await AdoptionForm.updateMany(
+        {
+          _id: { $ne: formId }, // Loại trừ form hiện tại
+          pet: updatedForm.pet._id, // Tìm các form có cùng pet._id
+          status: { $ne: 'Rejected' } // Chỉ cập nhật các form chưa bị Rejected
+        },
+        { $set: { status: 'Rejected' } }
+      )
+
+      // 2. Cập nhật pet
+      await Pet.findByIdAndUpdate(updatedForm.pet._id, {
+        $set: { isAdopted: true }
+      })
+
+      // 3. Cập nhật adoptionPost thành "Pending"
+      await AdoptionPost.findByIdAndUpdate(updatedForm.adoptionPost._id, {
+        $set: { adopt_status: 'Pending' }
+      })
+    }
+
+    if (updatedForm.status === 'Rejected') {
+      await Pet.findByIdAndUpdate(updatedForm.pet._id, {
+        $set: { isAdopted: false }
+      })
+    }
+
     return OK(res, ADOPTION_FORM_MESSAGE.UPDATED_SUCCESS, updatedForm)
+  }
+
+  async alertCheckForm(req, res) {
+    const { formId } = req.params
+
+    const form = await AdoptionForm.findById(formId).populate('sender pet')
+    if (!form) {
+      return res.status(StatusCodes.NOT_FOUND).json({
+        success: false,
+        message: 'Adoption form not found'
+      })
+    }
+
+    if (form.status !== 'Approved' || form.periodicChecks.length >= 3) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: 'Form does not require a check alert'
+      })
+    }
+
+    // Tạo thông báo
+    const notification = await Notification.create({
+      type: NOTIFICAITON_TYPE.CHECK_REQUEST,
+      sender: req.id,
+      recipient: form.sender._id,
+      post: form.adoptionPost || null,
+      message: `Đơn nhận nuôi ${form.pet.name} của bạn cần được kiểm tra định kỳ ngay!`,
+      read: false
+    })
+
+    const userSocketId = getReceiverSocketId(form.sender._id.toString())
+    if (userSocketId) {
+      io.to(userSocketId).emit('notification', {
+        ...notification.toObject(),
+        sender: { _id: req.id, username: 'staff' }
+      })
+    }
+
+    return OK(res, 'Check alert sent successfully', notification)
   }
 }
 
