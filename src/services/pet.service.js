@@ -157,7 +157,7 @@ class PetService {
       sender: null,
       recipient: pet.submittedBy._id,
       post: null,
-      message: `Yêu cầu nhận nuôi thú cưng của bạn đã được phê duyệt!`,
+      message: `Yêu cầu gửi thú cưng của bạn đã được phê duyệt! Chúng tôi sẽ liên hệ bạn để tiếp nhận thú cưng thời gian sớm nhất`,
       read: false
     })
 

@@ -71,7 +71,13 @@ class AdoptionFormController {
         adoptionForms.results.map(async (form) => {
           const populatedForm = await AdoptionForm.findById(form._id)
             .populate('adoptionPost')
-            .populate('pet')
+            .populate({
+              path: 'pet',
+              populate: {
+                path: 'breed',
+                select: 'name'
+              }
+            })
             .populate('sender')
             .populate({
               path: 'periodicChecks',
@@ -133,11 +139,11 @@ class AdoptionFormController {
       const defaultFilters = { sender: senderId }
 
       const options = {
-        sortBy: sortBy || 'createdAt', // Sắp xếp mặc định theo createdAt
-        limit: limit ? parseInt(limit) : 5, // Giới hạn mặc định là 5
-        page: page ? parseInt(page) : 1, // Trang mặc định là 1
-        allowSearchFields: ['reason', 'adopter.name', 'adopter.email'], // Các trường cho phép tìm kiếm
-        q: q ?? '' // Chuỗi tìm kiếm, mặc định rỗng
+        sortBy: sortBy || 'createdAt',
+        limit: limit ? parseInt(limit) : 5,
+        page: page ? parseInt(page) : 1,
+        allowSearchFields: ['reason', 'adopter.name', 'adopter.email'],
+        q: q ?? ''
       }
 
       if (status) {
@@ -291,7 +297,7 @@ class AdoptionFormController {
 
   async updateAdoptionFormStatus(req, res) {
     const { formId } = req.params
-    const { status } = req.body
+    const { status, note } = req.body
 
     if (!['Pending', 'Approved', 'Rejected'].includes(status)) {
       return res.status(400).json({
@@ -300,9 +306,11 @@ class AdoptionFormController {
       })
     }
 
-    const updatedForm = await AdoptionForm.findByIdAndUpdate(formId, { status }, { new: true }).populate(
-      'adopter pet adoptionPost sender'
-    )
+    const updatedForm = await AdoptionForm.findByIdAndUpdate(
+      formId,
+      { status, response_note: note },
+      { new: true }
+    ).populate('adopter pet adoptionPost sender')
 
     if (!updatedForm) {
       return res.status(404).json({
@@ -346,14 +354,13 @@ class AdoptionFormController {
 
     // Xử lý khi status là "Approved"
     if (updatedForm.status === 'Approved') {
-      // 1. Cập nhật tất cả các form khác có cùng pet._id thành "Rejected"
       await AdoptionForm.updateMany(
         {
           _id: { $ne: formId }, // Loại trừ form hiện tại
           pet: updatedForm.pet._id, // Tìm các form có cùng pet._id
           status: { $ne: 'Rejected' } // Chỉ cập nhật các form chưa bị Rejected
         },
-        { $set: { status: 'Rejected' } }
+        { $set: { status: 'Rejected', response_note: 'Đã có đăng ký được phê duyệt' } }
       )
 
       // 2. Cập nhật pet
