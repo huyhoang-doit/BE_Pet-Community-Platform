@@ -71,7 +71,7 @@ const ADOPTION_POST_MESSAGE = {
   FETCH_ALL_SUCCESS: 'Successfully retrieved all adoption posts',
   FETCH_SUCCESS: 'Successfully retrieved adoption post',
   LIKED_SUCCESS: 'Successfully liked post',
-  SHARED_SUCCESS: 'Successfully shared post',
+  SHARED_SUCCESS: 'Successfully shared post'
 }
 const ADOPTION_FORM_MESSAGE = {
   NOT_FOUND: 'Adoption form not found',
@@ -80,7 +80,8 @@ const ADOPTION_FORM_MESSAGE = {
   DELETED_SUCCESS: 'Adoption form deleted successfully',
   FETCH_ALL_SUCCESS: 'Successfully retrieved all adoption forms',
   ADD_PERIODIC_CHECK_SUCCESS: 'Successfully added periodic check',
-  FETCH_SUCCESS: 'Successfully retrieved adoption form'
+  FETCH_SUCCESS: 'Successfully retrieved adoption form',
+  FETCH_FORM_BY_SENDER_ID: 'Successfully fetch form by senderId'
 }
 
 const CAMPAIGN_MESSAGE = {

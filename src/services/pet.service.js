@@ -157,7 +157,7 @@ class PetService {
       sender: null,
       recipient: pet.submittedBy._id,
       post: null,
-      message: `Yêu cầu nhận nuôi thú cưng của bạn đã được phê duyệt!`,
+      message: `Yêu cầu gửi thú cưng của bạn đã được phê duyệt! Chúng tôi sẽ liên hệ bạn để tiếp nhận thú cưng thời gian sớm nhất`,
       read: false
     })
 
@@ -194,11 +194,30 @@ class PetService {
         message: 'You have already requested to adopt this pet'
       })
     }
-
-    pet.adoptionRequests.push(userId)
-    await pet.save()
-
     return pet
+  }
+  async getPetBySubmittedId(userId, query) {
+    if (!userId) {
+      throw new ErrorWithStatus({ status: StatusCodes.BAD_REQUEST, message: 'User ID are required' })
+    }
+    const { sortBy, limit, page, q, ...filters } = query
+
+    const defaultFilters = { submittedBy: userId }
+
+    const options = {
+      sortBy: sortBy || 'createdAt',
+      limit: limit ? parseInt(limit) : 5,
+      page: page ? parseInt(page) : 1,
+      allowSearchFields: ['name'],
+      q: q ?? '',
+      populate: 'breed,adoptionRequests,formRequests'
+    }
+
+    const finalFilter = { ...defaultFilters, ...filters }
+
+    const pets = await Pet.paginate(finalFilter, options)
+
+    return pets
   }
 
   async adoptPet(userId, petId) {

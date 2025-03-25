@@ -43,7 +43,14 @@ const petSchema = new mongoose.Schema(
     totalDonation: { type: Number, default: 0 }, // Tổng tiền đã donate từ trước đến nay
     donationAmount: { type: Number, default: 0 }, // Số dư hiện tại sau khi trừ chi tiêu
     donationGoal: { type: Number, default: 0 },
-    donationCount: { type: Number, default: 0 }
+    donationCount: { type: Number, default: 0 },
+    formRequests: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'AdoptionForm'
+      }
+    ],
+    breed: { type: mongoose.Schema.Types.ObjectId, ref: 'Breed', required: true }
   },
   { timestamps: true }
 )
