@@ -133,7 +133,6 @@ class PetService {
       populate: 'owner,breed'
     }
 
-
     const finalFilter = { ...defaultFilters, ...filters }
 
     return await petRepo.getAll(finalFilter, options)
@@ -158,7 +157,7 @@ class PetService {
       sender: null,
       recipient: pet.submittedBy._id,
       post: null,
-      message: `Yêu cầu nhận nuôi thú cưng của bạn đã được phê duyệt!`,
+      message: `Yêu cầu gửi thú cưng của bạn đã được phê duyệt! Chúng tôi sẽ liên hệ bạn để tiếp nhận thú cưng thời gian sớm nhất`,
       read: false
     })
 
@@ -195,11 +194,30 @@ class PetService {
         message: 'You have already requested to adopt this pet'
       })
     }
-
-    pet.adoptionRequests.push(userId)
-    await pet.save()
-
     return pet
+  }
+  async getPetBySubmittedId(userId, query) {
+    if (!userId) {
+      throw new ErrorWithStatus({ status: StatusCodes.BAD_REQUEST, message: 'User ID are required' })
+    }
+    const { sortBy, limit, page, q, ...filters } = query
+
+    const defaultFilters = { submittedBy: userId }
+
+    const options = {
+      sortBy: sortBy || 'createdAt',
+      limit: limit ? parseInt(limit) : 5,
+      page: page ? parseInt(page) : 1,
+      allowSearchFields: ['name'],
+      q: q ?? '',
+      populate: 'breed,adoptionRequests,formRequests'
+    }
+
+    const finalFilter = { ...defaultFilters, ...filters }
+
+    const pets = await Pet.paginate(finalFilter, options)
+
+    return pets
   }
 
   async adoptPet(userId, petId) {
@@ -234,6 +252,50 @@ class PetService {
   async getPetById(petId) {
     const pet = await Pet.findById(petId)
     return pet
+  }
+  async getPetsNotAdoptedAndApproved(query) {
+    const { sortBy, limit, page, q, health_status, vaccinated, breed } = query
+
+    // Base filter
+    const filter = {
+      isApproved: true,
+      isAdopted: false
+    }
+
+    // Add dynamic filters based on query parameters
+    if (health_status) {
+      filter.health_status = health_status
+    }
+
+    if (vaccinated !== undefined && vaccinated !== '') {
+      filter.vaccinated = vaccinated === 'true'
+    }
+
+    const options = {
+      sortBy: sortBy || 'createdAt:desc',
+      limit: limit ? parseInt(limit) : 10,
+      page: page ? parseInt(page) : 1,
+      allowSearchFields: ['name', 'description'],
+      q: q ?? '',
+      populate: [
+        { path: 'owner' },
+        { path: 'breed' },
+        { path: 'expenses', populate: { path: 'createdBy', select: 'username email' } },
+        { path: 'expenses', populate: { path: 'type', select: 'name color' } }
+      ]
+    }
+
+    return await petRepo.getAll(filter, options)
+  }
+
+  updateDonationGoal = async (petId, body) => {
+    const pet = await Pet.findById(petId)
+    if (!pet) {
+      throw new ErrorWithStatus({ status: StatusCodes.NOT_FOUND, message: 'Pet not found' })
+    }
+
+    pet.donationGoal = body.donationGoal
+    await pet.save()
   }
 }
 

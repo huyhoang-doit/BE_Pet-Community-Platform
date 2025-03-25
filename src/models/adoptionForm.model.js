@@ -12,7 +12,7 @@ const adoptionFormSchema = new mongoose.Schema(
       ref: 'Pet',
       required: [true, 'Pet ID is required']
     },
-    user: {
+    sender: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: [true, 'User ID is required']
@@ -60,15 +60,23 @@ const adoptionFormSchema = new mongoose.Schema(
         }
       }
     },
-    message: {
+    reason: {
       type: String,
       trim: true,
       default: ''
+    },
+    expected_date: {
+      type: Date,
+      required: [true, 'Expected date of receipt']
     },
     status: {
       type: String,
       enum: ['Pending', 'Approved', 'Rejected'],
       default: 'Pending'
+    },
+    response_note: {
+      type: String,
+      default: ''
     },
     approved_date: {
       type: Date,

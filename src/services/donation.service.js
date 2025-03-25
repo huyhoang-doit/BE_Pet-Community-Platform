@@ -22,33 +22,13 @@ class DonationService {
     donation.transactionDateTime = paymentData.transactionDateTime
     await donation.save()
 
-    const campaign = await Campaign.findById(donation.campaign)
-    if (!campaign) {
-      throw new ErrorWithStatus({
-        status: StatusCodes.NOT_FOUND,
-        message: CAMPAIGN_MESSAGE.CAMPAIGN_NOT_FOUND
-      })
-    }
-
-    campaign.currentAmount += donation.amount
-    await campaign.save()
-
-    return { donation, campaign }
+    return donation
   }
 
   getTop5Donate = async () => {
-    const currentDate = new Date()
-    const campaign = await Campaign.findOne({
-      startDate: { $lte: currentDate },
-      endDate: { $gte: currentDate }
-    })
-    if (!campaign) {
-      throw new ErrorWithStatus({ status: StatusCodes.NOT_FOUND, message: CAMPAIGN_MESSAGE.CAMPAIGN_NOT_FOUND })
-    }
     const topDonate = await Donation.aggregate([
       {
         $match: {
-          campaign: campaign._id,
           status: TRANSACTION_STATUS.COMPLETED
         }
       },
@@ -91,22 +71,27 @@ class DonationService {
       page: page ? parseInt(page) : 1,
       allowSearchFields: ['description', 'message'],
       q: q ?? '',
-      populate: 'user,campaign'
+      populate: 'user,campaign,pet'
     }
     return await Donation.paginate(filter, options)
   }
 
-  getDonationByUserId = async (userId, query) => {
+  getDonationByUserId = async (user, query) => {
     const { q, page, limit, sortBy } = query
+    const filter = {
+      status: TRANSACTION_STATUS.COMPLETED,
+      user
+    }
+    
     const options = {
       sortBy: sortBy || 'createdAt:desc',
       limit: limit ? parseInt(limit) : 5,
       page: page ? parseInt(page) : 1,
-      allowSearchFields: ['message'],
+      allowSearchFields: ['description', 'message'],
       q: q ?? '',
-      populate: 'user,campaign'
+      populate: 'user,campaign,pet'
     }
-    return await Donation.paginate({ user: userId }, options)
+    return await Donation.paginate(filter, options)
   }
 }
 module.exports = new DonationService()

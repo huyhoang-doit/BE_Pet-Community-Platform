@@ -1932,7 +1932,7 @@ paths:
         '403':
           description: Unauthorized access
           
-  /admin/staffs:
+  /admin/staff:
     get:
       tags:
         - Admin
@@ -2008,6 +2008,7 @@ paths:
                     type: string
                     example: "Failed to fetch staffs"
 
+    
   /adoption-post:
     post:
       summary: Create new adoption post
@@ -4460,97 +4461,3 @@ paths:
           description: Breed not found
         500:
           description: Internal server error
-
-
-  /admin/stats:
-    get:
-      tags:
-        - Admin
-      summary: Get platform statistics
-      security:
-        - BearerAuth: []
-      responses:
-        '200':
-          description: Statistics retrieved successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AdminStatsResponse'
-        '403':
-          description: Unauthorized access
-
-  /admin/staffs:
-    get:
-      tags:
-        - Admin
-      summary: Get all staff members
-      description: Retrieve a list of staff members with pagination, sorting, and filtering.
-      parameters:
-        - name: q
-          in: query
-          description: Search query for filtering by username.
-          schema:
-            type: string
-        - name: page
-          in: query
-          description: Page number for pagination.
-          schema:
-            type: integer
-            default: 1
-        - name: limit
-          in: query
-          description: Number of items per page.
-          schema:
-            type: integer
-            default: 5
-        - name: sortBy
-          in: query
-          description: Field to sort the results by.
-          schema:
-            type: string
-            default: createdAt
-      responses:
-        '200':
-          description: Successfully retrieved staff members.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: success
-                  message:
-                    type: string
-                    example: 'Staff members retrieved successfully'
-                  data:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        _id:
-                          type: string
-                          example: '60d0fe4f5311236168a109ca'
-                        username:
-                          type: string
-                          example: 'staffUser123'
-                        role:
-                          type: string
-                          enum: [SERVICE_STAFF, FORUM_STAFF]
-                          example: 'SERVICE_STAFF'
-                        isActive:
-                          type: boolean
-                          example: true
-        '500':
-          description: Internal server error.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: error
-                  message:
-                    type: string
-                    example: 'Failed to fetch staffs'
