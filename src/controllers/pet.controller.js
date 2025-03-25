@@ -95,6 +95,10 @@ class PetController {
     const breed = await breedService.getBreedById(req.params.breedId)
     return OK(res, 'Breed retrieved successfully', breed)
   })
+  requestAdoptPet = catchAsync(async (req, res) => {
+    const pet = await petService.requestAdoption(req.id, req.params.petId)
+    return OK(res, 'Adoption request sent successfully', pet)
+  })
   getPetsNotAdoptedAndApproved = async (req, res) => {
     const pets = await petService.getPetsNotAdoptedAndApproved(req.query)
     return OK(res, 'Pets retrieved successfully', pets)
@@ -103,7 +107,7 @@ class PetController {
     const pet = await petService.updateDonationGoal(req.params.id, req.body)
     return OK(res, 'Donation goal updated successfully', pet)
   })
-  
+
   getPetById = catchAsync(async (req, res) => {
     const pet = await petService.getPetById(req.params.petId)
     return OK(res, 'Get Pet successfully', pet)
