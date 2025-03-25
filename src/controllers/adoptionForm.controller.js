@@ -354,24 +354,45 @@ class AdoptionFormController {
 
     // Xử lý khi status là "Approved"
     if (updatedForm.status === 'Approved') {
-      await AdoptionForm.updateMany(
-        {
-          _id: { $ne: formId }, // Loại trừ form hiện tại
-          pet: updatedForm.pet._id, // Tìm các form có cùng pet._id
-          status: { $ne: 'Rejected' } // Chỉ cập nhật các form chưa bị Rejected
-        },
-        { $set: { status: 'Rejected', response_note: 'Đã có đăng ký được phê duyệt' } }
-      )
+      // 1. Cập nhật các đơn nhận nuôi khác thành "Rejected"
+      const otherForms = await AdoptionForm.find({
+        _id: { $ne: formId }, // Loại trừ form hiện tại
+        pet: updatedForm.pet._id, // Tìm các form có cùng pet._id
+        status: { $ne: 'Rejected' } // Chỉ lấy các form chưa bị Rejected
+      }).populate('sender adoptionPost pet')
 
-      // 2. Cập nhật pet
-      await Pet.findByIdAndUpdate(updatedForm.pet._id, {
-        $set: { isAdopted: true }
-      })
+      if (otherForms.length > 0) {
+        // Cập nhật trạng thái các form khác thành "Rejected"
+        await AdoptionForm.updateMany(
+          {
+            _id: { $ne: formId },
+            pet: updatedForm.pet._id,
+            status: { $ne: 'Rejected' }
+          },
+          { $set: { status: 'Rejected', response_note: 'Đã có đăng ký được phê duyệt' } }
+        )
 
-      // 3. Cập nhật adoptionPost thành "Pending"
-      await AdoptionPost.findByIdAndUpdate(updatedForm.adoptionPost._id, {
-        $set: { adopt_status: 'Pending' }
-      })
+        // Gửi thông báo "Rejected" đến sender của các form khác
+        for (const form of otherForms) {
+          const rejectMessage = `Đơn nhận nuôi ${form.pet.name} của bạn đã bị từ chối do đã có đăng ký được phê duyệt.`
+          const rejectNotification = await Notification.create({
+            type: NOTIFICAITON_TYPE.FORM_STATUS_UPDATE,
+            sender: null,
+            recipient: form.sender._id,
+            post: form.adoptionPost._id || null,
+            message: rejectMessage,
+            read: false
+          })
+
+          const otherUserSocketId = getReceiverSocketId(form.sender._id.toString())
+          if (otherUserSocketId) {
+            io.to(otherUserSocketId).emit('notification', {
+              ...rejectNotification.toObject(),
+              sender: null
+            })
+          }
+        }
+      }
     }
 
     if (updatedForm.status === 'Rejected') {
