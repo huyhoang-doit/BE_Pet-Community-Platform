@@ -1,6 +1,7 @@
 const User = require('../models/user.model') // Assuming you have a User model
 const Donation = require('../models/donation.model') // Assuming you have a Donation model
 const { ROLE } = require('../constants/enums')
+const Pet = require('../models/pet.model')
 
 class AdminService {
   getStats = async (req) => {
@@ -32,7 +33,8 @@ class AdminService {
             total: monthData ? monthData.total : 0
           }
         })
-        return { donations }
+        const totalsPetNotAdopted = await Pet.countDocuments({ isAdopted: false, isApproved: true })
+        return { donations, totalsPetNotAdopted }
       }
     } catch (error) {
       console.error('Error in getStats:', error)

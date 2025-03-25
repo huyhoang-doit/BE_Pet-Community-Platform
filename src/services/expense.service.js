@@ -6,8 +6,6 @@ const cloudinaryService = require('../utils/cloudinary.js')
 class ExpenseService {
   async createExpense(req, userId) {
     try {
-      console.log('req.body:', req.body)
-
       const { amount, note, date, type, petId } = req.body
       const createdBy = userId
       // Create expense
@@ -147,6 +145,24 @@ class ExpenseService {
     } catch (error) {
       console.error('Error in verifyReceipt:', error)
       throw new Error('Failed to verify receipt')
+    }
+  }
+
+  async deleteExpense(req) {
+    try {
+      const { id } = req.params
+      const expense = await Expense.findById(id)
+      if (!expense) {
+        throw new Error('Expense not found')
+      }
+
+      await Pet.findByIdAndUpdate(expense.pet, { $pull: { expenses: id } })
+
+      await expense.remove()
+      return expense
+    } catch (error) {
+      console.error('Error in deleteExpense:', error)
+      throw new Error('Failed to delete expense')
     }
   }
 }

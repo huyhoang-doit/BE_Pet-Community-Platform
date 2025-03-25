@@ -27,10 +27,13 @@ class ExpenseController {
     const receipt = await expenseService.uploadReceipt(req)
     return OK(res, EXPENSE_MESSAGE.UPLOADED_RECEIPT_SUCCESSFULLY, receipt)
   })
-
   verifyExpense = catchAsync(async (req, res) => {
     const receipt = await expenseService.verifyReceipt(req)
     return OK(res, EXPENSE_MESSAGE.VERIFIED_RECEIPT_SUCCESSFULLY, receipt)
+  })
+  deleteExpense = catchAsync(async (req, res) => {
+    await expenseService.deleteExpense(req)
+    return OK(res, EXPENSE_MESSAGE.DELETED_SUCCESSFULLY)
   })
 }
 

@@ -26,18 +26,9 @@ class DonationService {
   }
 
   getTop5Donate = async () => {
-    const currentDate = new Date()
-    const campaign = await Campaign.findOne({
-      startDate: { $lte: currentDate },
-      endDate: { $gte: currentDate }
-    })
-    if (!campaign) {
-      throw new ErrorWithStatus({ status: StatusCodes.NOT_FOUND, message: CAMPAIGN_MESSAGE.CAMPAIGN_NOT_FOUND })
-    }
     const topDonate = await Donation.aggregate([
       {
         $match: {
-          campaign: campaign._id,
           status: TRANSACTION_STATUS.COMPLETED
         }
       },
