@@ -18,7 +18,6 @@ class ExpenseService {
         type,
         pet: petId
       })
-      console.log('expense:', expense)
 
       await expense.save()
 
@@ -158,7 +157,8 @@ class ExpenseService {
 
       await Pet.findByIdAndUpdate(expense.pet, { $pull: { expenses: id } })
 
-      await expense.remove()
+      await Expense.findByIdAndDelete(id);
+      
       return expense
     } catch (error) {
       console.error('Error in deleteExpense:', error)
