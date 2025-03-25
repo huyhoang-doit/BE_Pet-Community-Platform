@@ -5,7 +5,7 @@ const { StatusCodes } = require('http-status-codes')
 
 class adminController {
   getStats = async (req, res) => {
-    const stats = await adminService.getStats()
+    const stats = await adminService.getStats(req)
     return OK(res, ADMIN_MESSAGE.GET_STATS_SUCCESSFULLY, stats)
   }
 

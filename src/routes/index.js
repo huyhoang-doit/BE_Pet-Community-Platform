@@ -16,6 +16,8 @@ const adminRoute = require('./admin.route')
 const breedRoute = require('./breed.route')
 const chatbotRoute = require('./chatbot.route')
 const clientSettingRoute = require('./clientSetting.route')
+const expenseTypeRoute = require('./expenseType.route')
+const expenseRoute = require('./expense.route')
 const routes = [
   {
     path: '/auth',
@@ -80,6 +82,14 @@ const routes = [
   {
     path: '/client-setting',
     route: clientSettingRoute
+  },
+  {
+    path: '/expense-type',
+    route: expenseTypeRoute
+  },
+  {
+    path: '/expense',
+    route: expenseRoute
   }
 ]
 

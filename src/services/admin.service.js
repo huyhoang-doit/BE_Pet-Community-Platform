@@ -1,34 +1,39 @@
 const User = require('../models/user.model') // Assuming you have a User model
 const Donation = require('../models/donation.model') // Assuming you have a Donation model
 const { ROLE } = require('../constants/enums')
+
 class AdminService {
-  getStats = async () => {
+  getStats = async (req) => {
     try {
-      const user = await User.countDocuments()
+      if (req.role === ROLE.ADMIN) {
+        const user = await User.countDocuments({ role: { $in: [ROLE.USER] } })
+        const numberForumStaff = await User.countDocuments({ role: { $in: [ROLE.FORUM_STAFF] } })
+        const numberServiceStaff = await User.countDocuments({ role: { $in: [ROLE.SERVICE_STAFF] } })
+        return { user, numberForumStaff, numberServiceStaff }
+      } else if (req.role === ROLE.MANAGER) {
+        const donationAggregation = await Donation.aggregate([
+          {
+            $match: { status: 'completed' }
+          },
+          {
+            $group: {
+              _id: { $month: '$createdAt' }, // Group by month
+              total: { $sum: '$amount' } // Sum donations
+            }
+          },
+          { $sort: { _id: 1 } } // Sort by month
+        ])
 
-      const donationAggregation = await Donation.aggregate([
-        {
-          $match: { status: 'completed' }
-        },
-        {
-          $group: {
-            _id: { $month: '$createdAt' }, // Group by month
-            total: { $sum: '$amount' } // Sum donations
+        // Ensure all months (1-12) are represented
+        const donations = Array.from({ length: 12 }, (_, index) => {
+          const monthData = donationAggregation.find((d) => d._id === index + 1)
+          return {
+            month: new Date(2000, index, 1).toLocaleString('en-US', { month: 'long' }), // Convert to month name
+            total: monthData ? monthData.total : 0
           }
-        },
-        { $sort: { _id: 1 } } // Sort by month
-      ])
-
-      // Ensure all months (1-12) are represented
-      const donations = Array.from({ length: 12 }, (_, index) => {
-        const monthData = donationAggregation.find((d) => d._id === index + 1)
-        return {
-          month: new Date(2000, index, 1).toLocaleString('en-US', { month: 'long' }), // Convert to month name
-          total: monthData ? monthData.total : 0
-        }
-      })
-
-      return { user, donations }
+        })
+        return { donations }
+      }
     } catch (error) {
       console.error('Error in getStats:', error)
       throw new Error('Failed to fetch admin stats')
@@ -37,7 +42,6 @@ class AdminService {
 
   getAllStaffs = async (query, userId) => {
     const { q, page, limit, sortBy } = query
-    
 
     const filter = {
       isActive: true,

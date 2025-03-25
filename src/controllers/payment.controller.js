@@ -12,12 +12,24 @@ const Donation = require('../models/donation.model')
 
 class PaymentController {
   createPaymentLinkMember = catchAsync(async (req, res) => {
-    const { amount, description, campaignId, returnUrl, cancelUrl } = req.body
+    const { amount, description, campaignId, petId, returnUrl, cancelUrl } = req.body
 
+    if (campaignId && petId) {
+      throw new ErrorWithStatus({
+        status: StatusCodes.BAD_REQUEST,
+        message: 'Donation must be linked to either a campaign or a pet, not both.'
+      })
+    }
+    if (!campaignId && !petId) {
+      throw new ErrorWithStatus({
+        status: StatusCodes.BAD_REQUEST,
+        message: 'Donation must be linked to either a campaign or a pet.'
+      })
+    }
     const userId = req.id
     const order = {
       amount: parseInt(amount),
-      description: description || 'Ủng hộ chiến dịch',
+      description: description || (campaignId ? 'Ủng hộ chiến dịch' : 'Ủng hộ thú cưng'),
       orderCode: crypto.randomInt(100000, 999999),
       returnUrl: returnUrl,
       cancelUrl: cancelUrl,
@@ -27,7 +39,8 @@ class PaymentController {
 
     await Donation.create({
       user: userId,
-      campaign: campaignId,
+      campaign: campaignId || null,
+      pet: petId || null,
       amount: order.amount,
       description: order.description,
       code: order.orderCode,
@@ -70,11 +83,16 @@ class PaymentController {
   })
 
   receiveHook = catchAsync(async (req, res) => {
-    const webhookData = payos.verifyPaymentWebhookData(req.body)
-    if (webhookData.code === '00' && webhookData.desc === 'success') {
-      await donationService.updateDonationStatus(webhookData.orderCode, webhookData)
+    try {
+      const webhookData = payos.verifyPaymentWebhookData(req.body)
+      if (webhookData.code === '00' && webhookData.desc === 'success') {
+        await donationService.updateDonationStatus(webhookData.orderCode, webhookData)
+      }
+      res.status(200).json({ message: 'Webhook processed successfully' })
+    } catch (error) {
+      console.error('Error processing webhook:', error)
+      res.status(500).json({ message: 'Webhook processing failed' })
     }
-    res.json({ message: 'Webhook processed successfully' })
   })
 }
 

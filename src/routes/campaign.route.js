@@ -10,8 +10,8 @@ const router = express.Router()
 router.route('/current').get(currentCampaign)
 router.route('/:id').get(getCampaignById)
 router.route('/:id/donations').get(isAuthenticated, getDonationsByCampaignId)
-router.route('/').get(isAuthenticated, checkRole(ROLE.ADMIN), getCampaigns)
-router.route('/').post(isAuthenticated, checkRole(ROLE.ADMIN), upload.single('image'), createCampaign)
-router.route('/:id').delete(isAuthenticated, checkRole(ROLE.ADMIN), stopCampaign)
+router.route('/').get(isAuthenticated, checkRole(ROLE.MANAGER), getCampaigns)
+router.route('/').post(isAuthenticated, checkRole(ROLE.MANAGER), upload.single('image'), createCampaign)
+router.route('/:id').delete(isAuthenticated, checkRole(ROLE.MANAGER), stopCampaign)
 
 module.exports = router

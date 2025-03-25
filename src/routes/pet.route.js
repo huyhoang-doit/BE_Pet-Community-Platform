@@ -9,6 +9,8 @@ const PetValidation = require('../validation/pet.validation.js')
 
 const router = express.Router()
 
+router.get('/', PetController.getPetsNotAdoptedAndApproved)
+
 router.post(
   '/add',
   isAuthenticated,
@@ -38,5 +40,5 @@ router.get('/not-approved', isAuthenticated, PetController.getPetNotApprove)
 router.get('/approved', isAuthenticated, PetController.getPetApprove)
 router.post('/adopt/:petId', isAuthenticated, PetController.userAdoptPet)
 router.post('/request/:petId', isAuthenticated, PetController.requestAdoptPet)
-
+router.put('/:id/donation-goal', isAuthenticated, PetController.updateDonationGoal)
 module.exports = router

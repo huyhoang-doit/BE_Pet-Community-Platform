@@ -4,6 +4,18 @@ const COMMON_MESSAGE = {
   SOMETHING_WENT_WRONG_WITH_DATABASE: 'Something went wrong with database, please try again!'
 }
 
+const EXPENSE_MESSAGE = {
+  NOT_FOUND: 'Expense not found',
+  CREATED_SUCCESSFULLY: 'Expense created successfully',
+  UPDATED_SUCCESSFULLY: 'Expense updated successfully',
+  DELETED_SUCCESSFULLY: 'Expense deleted successfully',
+  GET_ALL_SUCCESSFULLY: 'Get all expenses successfully',
+  GET_SUCCESSFULLY: 'Get expense successfully',
+  UPLOADED_RECEIPT_SUCCESSFULLY: 'Receipt uploaded successfully',
+  VERIFIED_RECEIPT_SUCCESSFULLY: 'Receipt verified successfully',
+  APPROVED_SUCCESSFULLY: 'Expense approved successfully',
+}
+
 const USER_MESSAGE = {
   USER_NOT_FOUND: 'User not found',
   USER_BLOCKED_SUCCESSFULLY: 'User blocked',
@@ -115,6 +127,12 @@ const ADMIN_MESSAGE = {
   CREATE_STAFF_ACCOUNT_SUCCESSFULLY: 'Create staff account successfully'
 }
 
+const EXPENSE_TYPES_MESSAGE = {
+  GET_EXPENSE_TYPES_SUCCESSFULLY: 'Get expense types successfully',
+  CREATE_EXPENSE_TYPE_SUCCESSFULLY: 'Create expense type successfully',
+  DELETE_EXPENSE_TYPE_SUCCESSFULLY: 'Delete expense type successfully'
+}
+
 module.exports = {
   NOTIFICATION_MESSAGE,
   COMMON_MESSAGE,
@@ -127,5 +145,7 @@ module.exports = {
   TRANSACTION_MESSAGE,
   BLOG_MESSAGE,
   ADMIN_MESSAGE,
-  ADOPTION_FORM_MESSAGE
+  ADOPTION_FORM_MESSAGE,
+  EXPENSE_MESSAGE,
+  EXPENSE_TYPES_MESSAGE
 }

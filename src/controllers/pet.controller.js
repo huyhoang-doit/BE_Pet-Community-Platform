@@ -92,6 +92,14 @@ class PetController {
     const breed = await breedService.getBreedById(req.params.breedId)
     return OK(res, 'Breed retrieved successfully', breed)
   })
+  getPetsNotAdoptedAndApproved = async (req, res) => {
+    const pets = await petService.getPetsNotAdoptedAndApproved(req.query)
+    return OK(res, 'Pets retrieved successfully', pets)
+  }
+  updateDonationGoal = catchAsync(async (req, res) => {
+    const pet = await petService.updateDonationGoal(req.params.id, req.body)
+    return OK(res, 'Donation goal updated successfully', pet)
+  })
 }
 
 module.exports = new PetController()

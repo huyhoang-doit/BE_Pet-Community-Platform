@@ -22,18 +22,7 @@ class DonationService {
     donation.transactionDateTime = paymentData.transactionDateTime
     await donation.save()
 
-    const campaign = await Campaign.findById(donation.campaign)
-    if (!campaign) {
-      throw new ErrorWithStatus({
-        status: StatusCodes.NOT_FOUND,
-        message: CAMPAIGN_MESSAGE.CAMPAIGN_NOT_FOUND
-      })
-    }
-
-    campaign.currentAmount += donation.amount
-    await campaign.save()
-
-    return { donation, campaign }
+    return donation
   }
 
   getTop5Donate = async () => {
@@ -91,7 +80,7 @@ class DonationService {
       page: page ? parseInt(page) : 1,
       allowSearchFields: ['description', 'message'],
       q: q ?? '',
-      populate: 'user,campaign'
+      populate: 'user,campaign,pet'
     }
     return await Donation.paginate(filter, options)
   }
@@ -109,7 +98,7 @@ class DonationService {
       page: page ? parseInt(page) : 1,
       allowSearchFields: ['description', 'message'],
       q: q ?? '',
-      populate: 'user,campaign'
+      populate: 'user,campaign,pet'
     }
     return await Donation.paginate(filter, options)
   }
