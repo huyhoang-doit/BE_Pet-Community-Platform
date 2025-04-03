@@ -133,38 +133,77 @@ async function checkContentAndImage(text, imageBuffer) {
 
 async function chatbot(breedName) {
   const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
-  const prompt = `Hãy cung cấp hướng dẫn chăm sóc chi tiết cho giống thú cưng "${breedName}". 
-  Hãy sử dụng icon (emoji) phù hợp để minh họa từng phần trong câu trả lời. Ví dụ: 🥩 cho dinh dưỡng, 🛁 cho vệ sinh, 🚶 cho vận động.`
+
+  const prompt = `Hãy cung cấp hướng dẫn chăm sóc chi tiết cho giống thú cưng "${breedName}" ở định dạng Markdown, với các tiêu đề rõ ràng (##, ###), danh sách gạch đầu dòng (-), và in đậm các từ khóa quan trọng (**text**).`
 
   try {
     const result = await model.generateContent(prompt)
-    let responseText = result.response.text()
-    console.log('Raw response:', responseText)
+    const responseText = result.response.text()
 
-    // Chuyển đổi Markdown sang HTML
-    let responseHtml = responseText
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\n- (.*?)/g, '<li>$1</li>')
-      .replace(/\n/g, '<br>')
-
-    return `<div>${responseHtml}</div>`
+    return responseText
   } catch (error) {
-    console.error('Error:', error)
-    return `
-      <div>
-        <p>Hiện tại không thể lấy thông tin chăm sóc từ Gemini. Dưới đây là hướng dẫn cơ bản mặc định:</p>
-        <ul>
-          <li>🥩 <strong>Dinh dưỡng:</strong> Cho ăn thức ăn chất lượng cao, phù hợp với kích thước và độ tuổi.</li>
-          <li>🛁 <strong>Vệ sinh:</strong> Tắm 1-2 lần/tháng, chải lông thường xuyên.</li>
-          <li>🚶 <strong>Vận động:</strong> Dắt đi dạo 20-30 phút/ngày.</li>
-          <li>🏥 <strong>Sức khỏe:</strong> Khám thú y định kỳ.</li>
-          <li>🏠 <strong>Môi trường:</strong> Chuẩn bị chỗ nghỉ sạch sẽ, thoáng mát.</li>
-        </ul>
-      </div>
-    `
+    console.error('Error in chatbot:', error)
+    return 'Xin lỗi, tôi không thể lấy thông tin chăm sóc lúc này. Vui lòng thử lại sau!'
   }
 }
 
+async function recommendBreeds(userPreferences, breedList) {
+  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+
+  const prompt = `
+    Bạn là một chuyên gia về thú cưng. Hãy phân tích các tiêu chí của người dùng và đề xuất TOP 3 giống chó phù hợp nhất.
+
+    Tiêu chí người dùng:
+    ${userPreferences}
+
+    Danh sách giống chó hiện có:
+    ${breedList.join(', ')}
+
+    Hãy phân tích kỹ và trả về JSON với định dạng sau:
+    {
+      "breeds": ["Tên giống 1", "Tên giống 2", "Tên giống 3"],
+      "explanation": "Giải thích chi tiết lý do chọn mỗi giống, bao gồm ưu điểm và sự phù hợp với tiêu chí của người dùng"
+    }
+
+    Lưu ý:
+    - Chỉ chọn giống có trong danh sách đã cho
+    - Giải thích cần chi tiết và dễ hiểu
+    - Đảm bảo các giống được chọn phù hợp với không gian sống và kinh nghiệm của người dùng
+  `
+
+  try {
+    const result = await model.generateContent(prompt)
+    const responseText = result.response.text()
+
+    // Extract JSON from response
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/s)
+    if (!jsonMatch) {
+      throw new Error("Không tìm thấy JSON trong phản hồi từ Gemini");
+    }
+
+    const parsedResponse = JSON.parse(jsonMatch[0])
+
+    // Validate response format
+    if (!parsedResponse.breeds || !Array.isArray(parsedResponse.breeds) || !parsedResponse.explanation) {
+      throw new Error('Phản hồi không đúng định dạng')
+    }
+
+    return {
+      success: true,
+      data: parsedResponse
+    }
+  } catch (error) {
+    console.error('Error in recommendBreeds:', error)
+    return {
+      success: false,
+      error: 'Không thể đề xuất giống thú cưng. Vui lòng thử lại sau.',
+      data: {
+        breeds: [],
+        explanation: 'Có lỗi xảy ra khi phân tích. Vui lòng thử lại.'
+      }
+    }
+  }
+}
 
 // async function checkImage(imageBuffer) {
 //   const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro-latest' })
@@ -244,4 +283,4 @@ async function checkBoth(text, imageBuffer) {
   return await checkContentAndImage(text, imageBuffer)
 }
 
-module.exports = { checkContent, checkImage, checkBoth, chatbot }
+module.exports = { checkContent, checkImage, checkBoth, chatbot, recommendBreeds }

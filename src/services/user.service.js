@@ -18,8 +18,8 @@ class UserService {
           isDeleted: false
         },
         options: { sort: { createdAt: -1 } }
-      });
-    return user;
+      })
+    return user
   }
 
   getProfileById = async (userId) => {
@@ -34,8 +34,8 @@ class UserService {
           isDeleted: false
         },
         options: { sort: { createdAt: -1 } }
-      });
-    return user;
+      })
+    return user
   }
 
   editProfile = async (userId, updateData, profilePicture) => {
@@ -61,7 +61,6 @@ class UserService {
         })
       }
     }
-    console.log(updateData)
 
     Object.assign(user, updateData)
     await user.save()

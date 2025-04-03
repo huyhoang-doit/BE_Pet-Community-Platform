@@ -20,9 +20,10 @@ class AuthService {
     )
   }
 
-  signRefreshToken = async ({ user_id }) => {
+  signRefreshToken = async ({ user_id, role }) => {
     const payload = {
       userId: user_id,
+      role,
       type: TokenType.RefreshToken
     }
     return generateToken(
@@ -32,9 +33,10 @@ class AuthService {
     )
   }
 
-  signEmailVerifyToken = async ({ user_id }) => {
+  signEmailVerifyToken = async ({ user_id, role }) => {
     const payload = {
       userId: user_id,
+      role,
       type: TokenType.EmailVerifyToken
     }
     return generateToken(
@@ -44,9 +46,10 @@ class AuthService {
     )
   }
 
-  signForgotPasswordToken = async ({ user_id }) => {
+  signForgotPasswordToken = async ({ user_id, role }) => {
     const payload = {
       userId: user_id,
+      role,
       type: TokenType.ForgotPasswordToken
     }
     return generateToken(
@@ -100,7 +103,7 @@ class AuthService {
   refreshToken = async (refreshToken) => {
     const decoded = await verifyToken(refreshToken, process.env.JWT_SECRET_REFRESH_TOKEN_KEY)
     const accessToken = await generateToken(
-      { userId: decoded.userId },
+      { userId: decoded.userId, role: decoded.role },
       process.env.JWT_SECRET_ACCESS_TOKEN_KEY,
       parseInt(process.env.ACCESS_TOKEN_EXPIRES_IN) || '24h'
     )

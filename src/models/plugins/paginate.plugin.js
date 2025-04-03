@@ -35,14 +35,20 @@ const paginate = (schema) => {
     let docsPromise = this.find(queryFilter).sort(sort).skip(skip).limit(limit).select(options.fields)
 
     if (options.populate) {
-      options.populate.split(',').forEach((populateOption) => {
-        docsPromise = docsPromise.populate(
-          populateOption
-            .split('.')
-            .reverse()
-            .reduce((a, b) => ({ path: b, populate: a }))
-        )
-      })
+      if (Array.isArray(options.populate)) {
+        options.populate.forEach((pop) => {
+          docsPromise = docsPromise.populate(pop)
+        })
+      } else {
+        options.populate.split(',').forEach((populateOption) => {
+          docsPromise = docsPromise.populate(
+            populateOption
+              .split('.')
+              .reverse()
+              .reduce((a, b) => ({ path: b, populate: a }))
+          )
+        })
+      }
     }
 
     docsPromise = docsPromise.exec()

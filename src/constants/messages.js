@@ -4,6 +4,18 @@ const COMMON_MESSAGE = {
   SOMETHING_WENT_WRONG_WITH_DATABASE: 'Something went wrong with database, please try again!'
 }
 
+const EXPENSE_MESSAGE = {
+  NOT_FOUND: 'Expense not found',
+  CREATED_SUCCESSFULLY: 'Expense created successfully',
+  UPDATED_SUCCESSFULLY: 'Expense updated successfully',
+  DELETED_SUCCESSFULLY: 'Expense deleted successfully',
+  GET_ALL_SUCCESSFULLY: 'Get all expenses successfully',
+  GET_SUCCESSFULLY: 'Get expense successfully',
+  UPLOADED_RECEIPT_SUCCESSFULLY: 'Receipt uploaded successfully',
+  VERIFIED_RECEIPT_SUCCESSFULLY: 'Receipt verified successfully',
+  APPROVED_SUCCESSFULLY: 'Expense approved successfully',
+}
+
 const USER_MESSAGE = {
   USER_NOT_FOUND: 'User not found',
   USER_BLOCKED_SUCCESSFULLY: 'User blocked',
@@ -59,7 +71,7 @@ const ADOPTION_POST_MESSAGE = {
   FETCH_ALL_SUCCESS: 'Successfully retrieved all adoption posts',
   FETCH_SUCCESS: 'Successfully retrieved adoption post',
   LIKED_SUCCESS: 'Successfully liked post',
-  SHARED_SUCCESS: 'Successfully shared post',
+  SHARED_SUCCESS: 'Successfully shared post'
 }
 const ADOPTION_FORM_MESSAGE = {
   NOT_FOUND: 'Adoption form not found',
@@ -68,7 +80,8 @@ const ADOPTION_FORM_MESSAGE = {
   DELETED_SUCCESS: 'Adoption form deleted successfully',
   FETCH_ALL_SUCCESS: 'Successfully retrieved all adoption forms',
   ADD_PERIODIC_CHECK_SUCCESS: 'Successfully added periodic check',
-  FETCH_SUCCESS: 'Successfully retrieved adoption form'
+  FETCH_SUCCESS: 'Successfully retrieved adoption form',
+  FETCH_FORM_BY_SENDER_ID: 'Successfully fetch form by senderId'
 }
 
 const CAMPAIGN_MESSAGE = {
@@ -111,7 +124,14 @@ const NOTIFICATION_MESSAGE = {
 
 const ADMIN_MESSAGE = {
   GET_STATS_SUCCESSFULLY: 'Get stats successfully',
-  GET_ALL_STAFFS_SUCCESSFULLY: 'Get all staffs successfully'
+  GET_ALL_STAFFS_SUCCESSFULLY: 'Get all staffs successfully',
+  CREATE_STAFF_ACCOUNT_SUCCESSFULLY: 'Create staff account successfully'
+}
+
+const EXPENSE_TYPES_MESSAGE = {
+  GET_EXPENSE_TYPES_SUCCESSFULLY: 'Get expense types successfully',
+  CREATE_EXPENSE_TYPE_SUCCESSFULLY: 'Create expense type successfully',
+  DELETE_EXPENSE_TYPE_SUCCESSFULLY: 'Delete expense type successfully'
 }
 
 module.exports = {
@@ -126,5 +146,7 @@ module.exports = {
   TRANSACTION_MESSAGE,
   BLOG_MESSAGE,
   ADMIN_MESSAGE,
-  ADOPTION_FORM_MESSAGE
+  ADOPTION_FORM_MESSAGE,
+  EXPENSE_MESSAGE,
+  EXPENSE_TYPES_MESSAGE
 }

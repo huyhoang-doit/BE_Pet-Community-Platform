@@ -30,5 +30,6 @@ const userSchema = new mongoose.Schema(
 )
 userSchema.plugin(require('./plugins/paginate.plugin'))
 userSchema.plugin(require('./plugins/toJSON.plugin'))
+
 const User = mongoose.model('User', userSchema)
 module.exports = User

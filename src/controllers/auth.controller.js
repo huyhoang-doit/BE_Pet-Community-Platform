@@ -2,7 +2,8 @@ const { StatusCodes } = require('http-status-codes')
 const catchAsync = require('../utils/catchAsync')
 const authService = require('../services/auth.service')
 const { OK, CREATED } = require('../configs/response.config')
-const { USER_MESSAGE } = require('../constants/messages')
+const { USER_MESSAGE, COMMON_MESSAGE } = require('../constants/messages')
+const ErrorWithStatus = require('../utils/errorWithStatus')
 
 class AuthController {
   register = catchAsync(async (req, res) => {

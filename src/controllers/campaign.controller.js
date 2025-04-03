@@ -34,7 +34,7 @@ class CampaignController {
     return OK(res, CAMPAIGN_MESSAGE.GET_CURRENT_CAMPAIGN_SUCCESSFULLY, campaign)
   })
 
-  getCampagins = catchAsync(async (req, res) => {
+  getCampaigns = catchAsync(async (req, res) => {
     const campaigns = await campaignService.getCampaigns(req.query)
     return OK(res, CAMPAIGN_MESSAGE.GET_CAMPAIGNS_SUCCESSFULLY, campaigns)
   })
